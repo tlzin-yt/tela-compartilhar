@@ -69,16 +69,18 @@
         </button>
       </div>
 
+      <!-- Grupos -->
       <div>
         <div class="flex items-center justify-between mb-2 px-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Grupos</span>
-          <button onclick="openModal('modal-create-group')" class="text-xs text-slate-400 hover:text-emerald-400"><i class="fa-solid fa-plus"></i></button>
+          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Grupos & Calls Abertas</span>
+          <button onclick="openModal('modal-create-group')" class="text-xs text-slate-400 hover:text-emerald-400" title="Criar Grupo"><i class="fa-solid fa-plus"></i></button>
         </div>
         <div id="groups-list" class="space-y-1">
           <p id="no-groups-msg" class="text-xs text-slate-500 italic px-2">Nenhum grupo ainda.</p>
         </div>
       </div>
 
+      <!-- Amigos -->
       <div>
         <div class="flex items-center justify-between mb-2 px-2">
           <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Amigos</span>
@@ -287,8 +289,8 @@
         <button onclick="closeModal('modal-add-friend')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">ID do Amigo</label>
-        <input type="text" id="friend-id-input" placeholder="ID ou nome..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">ID ou Nome do Amigo</label>
+        <input type="text" id="friend-id-input" placeholder="Nome do amigo..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('modal-add-friend')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
@@ -306,11 +308,32 @@
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome do Grupo</label>
-        <input type="text" id="group-name-input" placeholder="Ex: Galera" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <input type="text" id="group-name-input" placeholder="Ex: Galera do Game" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('modal-create-group')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
         <button onclick="createGroup()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Criar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADICIONAR MEMBRO AO GRUPO -->
+  <div id="modal-add-member" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-white text-base">Adicionar Amigo ao Grupo</h3>
+        <button onclick="closeModal('modal-add-member')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="hidden" id="selected-group-id">
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Selecione o Amigo</label>
+        <select id="group-friend-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+          <!-- Preenchido via JS -->
+        </select>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('modal-add-member')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="confirmAddMemberToGroup()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Adicionar</button>
       </div>
     </div>
   </div>
@@ -325,11 +348,21 @@
     let localStream = null;
     let screenStream = null;
     let currentRoomCode = null;
-    let activeCalls = {};
+    let activeConnections = {};
+    let remoteProfiles = {};
     
     let isMicMuted = false;
     let isCamOff = false;
     let isSharingScreen = false;
+
+    const peerConfig = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478' }
+        ]
+      }
+    };
 
     window.addEventListener('DOMContentLoaded', () => {
       loadUserData();
@@ -376,6 +409,18 @@
           sidebarFallback.classList.remove('hidden');
           sidebarFallback.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
         }
+      }
+
+      const localFallbackImg = document.getElementById('local-placeholder-img');
+      const localFallbackChar = document.getElementById('local-placeholder-fallback');
+      if (currentUser.avatar) {
+        localFallbackImg.src = currentUser.avatar;
+        localFallbackImg.classList.remove('hidden');
+        localFallbackChar.classList.add('hidden');
+      } else {
+        localFallbackImg.classList.add('hidden');
+        localFallbackChar.classList.remove('hidden');
+        localFallbackChar.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
       }
     }
 
@@ -447,6 +492,12 @@
       }
     }
 
+    function removeFriend(friendName) {
+      friendsList = friendsList.filter(f => f !== friendName);
+      saveUserData();
+      renderFriendsList();
+    }
+
     function renderFriendsList() {
       const listEl = document.getElementById('friends-list');
       document.getElementById('friends-count').textContent = friendsList.length;
@@ -457,13 +508,16 @@
       listEl.innerHTML = '';
       friendsList.forEach(friend => {
         const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-slate-800/60 transition cursor-pointer';
+        item.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-slate-800/60 transition';
         item.innerHTML = `
-          <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-2 cursor-pointer flex-1" onclick="startCallWithCode('${friend}')">
             <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-300">${friend.charAt(0).toUpperCase()}</div>
-            <span class="text-xs font-medium text-slate-200">${friend}</span>
+            <span class="text-xs font-medium text-slate-200 truncate">${friend}</span>
           </div>
-          <button onclick="startCallWithCode('${friend}')" class="p-1.5 text-slate-400 hover:text-emerald-400"><i class="fa-solid fa-phone text-xs"></i></button>
+          <div class="flex items-center space-x-1">
+            <button onclick="startCallWithCode('${friend}')" class="p-1.5 text-slate-400 hover:text-emerald-400" title="Chamar"><i class="fa-solid fa-phone text-xs"></i></button>
+            <button onclick="removeFriend('${friend}')" class="p-1.5 text-slate-400 hover:text-rose-400" title="Excluir Amigo"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>
         `;
         listEl.appendChild(item);
       });
@@ -472,12 +526,50 @@
     function createGroup() {
       const groupName = document.getElementById('group-name-input').value.trim();
       if (groupName) {
-        groupsList.push({ id: 'grupo-' + Math.random().toString(36).substring(2, 8), name: groupName });
+        const groupId = 'grupo-' + Math.random().toString(36).substring(2, 8);
+        groupsList.push({ id: groupId, name: groupName, members: [] });
         saveUserData();
         renderGroupsList();
         document.getElementById('group-name-input').value = '';
         closeModal('modal-create-group');
       }
+    }
+
+    function deleteGroup(groupId) {
+      groupsList = groupsList.filter(g => g.id !== groupId);
+      saveUserData();
+      renderGroupsList();
+    }
+
+    function openAddMemberModal(groupId) {
+      document.getElementById('selected-group-id').value = groupId;
+      const select = document.getElementById('group-friend-select');
+      select.innerHTML = '';
+      if (friendsList.length === 0) {
+        select.innerHTML = '<option value="">Adicione amigos primeiro</option>';
+      } else {
+        friendsList.forEach(f => {
+          select.innerHTML += `<option value="${f}">${f}</option>`;
+        });
+      }
+      openModal('modal-add-member');
+    }
+
+    function confirmAddMemberToGroup() {
+      const groupId = document.getElementById('selected-group-id').value;
+      const friendName = document.getElementById('group-friend-select').value;
+      if (!friendName) return;
+
+      const group = groupsList.find(g => g.id === groupId);
+      if (group) {
+        if (!group.members) group.members = [];
+        if (!group.members.includes(friendName)) {
+          group.members.push(friendName);
+          saveUserData();
+          renderGroupsList();
+        }
+      }
+      closeModal('modal-add-member');
     }
 
     function renderGroupsList() {
@@ -488,15 +580,21 @@
       }
       listEl.innerHTML = '';
       groupsList.forEach(group => {
+        const memberCount = group.members ? group.members.length : 0;
         const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-slate-800/60 transition cursor-pointer';
-        item.onclick = () => startCallWithCode(group.id);
+        item.className = 'flex flex-col p-2 rounded-xl hover:bg-slate-800/60 transition space-y-1';
         item.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">#</div>
-            <span class="text-xs font-medium text-slate-200">${group.name}</span>
+          <div class="flex items-center justify-between cursor-pointer" onclick="startCallWithCode('${group.id}')">
+            <div class="flex items-center space-x-2 truncate">
+              <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0">#</div>
+              <span class="text-xs font-medium text-slate-200 truncate">${group.name}</span>
+            </div>
+            <div class="flex items-center space-x-1" onclick="event.stopPropagation()">
+              <button onclick="openAddMemberModal('${group.id}')" class="p-1.5 text-slate-400 hover:text-emerald-400" title="Adicionar Membro"><i class="fa-solid fa-user-plus text-xs"></i></button>
+              <button onclick="deleteGroup('${group.id}')" class="p-1.5 text-slate-400 hover:text-rose-400" title="Excluir Grupo"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
           </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-600"></i>
+          ${memberCount > 0 ? `<div class="text-[10px] text-slate-500 pl-9">Membros: ${group.members.join(', ')}</div>` : ''}
         `;
         listEl.appendChild(item);
       });
@@ -507,24 +605,26 @@
       startOrJoinCall();
     }
 
-    // WEBRTC ROBUSTO COM DETECÇÃO INTELIGENTE
+    // WEBRTC & PEERJS ROBUSTO
     async function startOrJoinCall() {
       const usernameInput = document.getElementById('input-username').value.trim();
       const roomCodeInput = document.getElementById('input-room-code').value.trim();
 
       if (!usernameInput) { alert('Informe seu nome.'); return; }
-      if (!roomCodeInput) { alert('Informe o código da sala.'); return; }
+      if (!roomCodeInput) { alert('Informe o código da sala ou selecione um grupo.'); return; }
 
       currentUser.name = usernameInput;
       currentRoomCode = roomCodeInput;
       saveUserData();
 
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: { echoCancellation: true, noiseSuppression: true } 
+        });
         document.getElementById('local-video').srcObject = localStream;
       } catch (err) {
-        console.warn('Câmera/Microfone indisponível ou negada:', err);
-        // Cria stream vazio para não quebrar a chamada caso a câmera falhe
+        console.warn('Câmera/Microfone indisponível:', err);
         localStream = new MediaStream();
       }
 
@@ -532,77 +632,80 @@
 
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('call-screen').classList.remove('hidden');
-      document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
+      document.getElementById('current-room-title').textContent = 'Sala / Grupo: ' + currentRoomCode;
       updateConnectionStatus('connecting', 'Conectando à sala...');
     }
 
     function initPeerConnection() {
-      const hostId = `omnicall-${currentRoomCode}-host`;
-      const myId = `omnicall-${currentRoomCode}-${Math.random().toString(36).substring(2, 7)}`;
-
-      peer = new Peer(myId);
-
-      peer.on('open', (id) => {
-        currentUser.peerId = id;
-        console.log('Meu ID na sala:', id);
-
-        // Tenta se conectar ao Host da sala. Se o Host não existir ainda, assumimos o papel de Host chamando um ID padrão ou aguardando.
-        // Para garantir que qualquer um possa ser encontrado, tentamos ligar para o hostId fixo.
-        if (myId !== hostId) {
-          setTimeout(() => {
-            connectToPeer(hostId);
-          }, 1000);
-        }
-      });
-
-      // Se este cliente for o primeiro, ele pode registrar o ID do host se conectar diretamente,
-      // mas como usamos IDs aleatórios para evitar conflitos, qualquer um na sala disca para todos os outros ou para o host fixo.
-      // Vamos usar um mecanismo onde tentamos criar um peer com o ID do host primeiro:
-      peer.destroy(); // reinicia com estratégia de host/convidado limpa
-      
       const preciseHostId = `omnicall-room-${currentRoomCode}-master`;
-      peer = new Peer(preciseHostId);
+      peer = new Peer(peerConfig);
 
       peer.on('open', (id) => {
-        isHost = true;
-        console.log('Entrou como ANFITRIÃO da sala:', id);
-        updateConnectionStatus('connected', 'Sala ativa (Aguardando participantes)');
-      });
+        const hostPeer = new Peer(preciseHostId, peerConfig);
+        
+        hostPeer.on('open', (hId) => {
+          console.log('Conectado como ANFITRIÃO:', hId);
+          updateConnectionStatus('connected', 'Sala ativa (Aguardando participantes)');
+          setupPeerListeners(hostPeer);
+          peer.destroy();
+          peer = hostPeer;
+        });
 
-      peer.on('error', (err) => {
-        if (err.type === 'unavailable-id') {
-          // O host já existe! Entramos como convidado com ID aleatório
-          isHost = false;
-          const guestRandomId = `omnicall-guest-${Math.random().toString(36).substring(2, 7)}`;
-          peer = new Peer(guestRandomId);
-
-          peer.on('open', (gId) => {
-            console.log('Entrou como CONVIDADO:', gId);
-            updateConnectionStatus('connected', 'Conectado! Chamando anfitrião...');
+        hostPeer.on('error', (err) => {
+          if (err.type === 'unavailable-id') {
+            console.log('Host já existe. Entrando como Convidado...');
+            updateConnectionStatus('connected', 'Conectado! Entrando na call...');
+            setupPeerListeners(peer);
             connectToPeer(preciseHostId);
-          });
-
-          peer.on('call', (call) => {
-            call.answer(localStream);
-            handleIncomingStream(call);
-          });
-        } else {
-          console.error('Erro no PeerJS:', err);
-          updateConnectionStatus('error', 'Erro de conexão');
-        }
+          }
+        });
       });
+    }
 
-      peer.on('call', (call) => {
+    function setupPeerListeners(pInstance) {
+      pInstance.on('call', (call) => {
         call.answer(localStream);
         handleIncomingStream(call);
+        setupDataConnection(call.peer);
+      });
+
+      pInstance.on('connection', (conn) => {
+        setupDataReceiver(conn);
       });
     }
 
     function connectToPeer(targetPeerId) {
-      console.log('Discando para:', targetPeerId);
+      console.log('Ligando para o Host:', targetPeerId);
       const call = peer.call(targetPeerId, localStream);
       if (call) {
         handleIncomingStream(call);
+      }
+      setupDataConnection(targetPeerId);
+    }
+
+    function setupDataConnection(peerId) {
+      const conn = peer.connect(peerId);
+      activeConnections[peerId] = conn;
+      conn.on('open', () => {
+        conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar });
+      });
+      conn.on('data', (data) => {
+        handleDataMessage(data, peerId);
+      });
+    }
+
+    function setupDataReceiver(conn) {
+      conn.on('data', (data) => {
+        handleDataMessage(data, conn.peer);
+      });
+    }
+
+    function handleDataMessage(data, peerId) {
+      if (data.type === 'profile') {
+        remoteProfiles[peerId] = { name: data.name, avatar: data.avatar };
+        updateRemoteTileMetadata(peerId, data.name, data.avatar);
+      } else if (data.type === 'chat') {
+        appendChatMessage(data.sender, data.message);
       }
     }
 
@@ -631,15 +734,38 @@
       video.srcObject = stream;
       video.className = 'w-full h-full object-cover';
 
+      const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '' };
+
+      const avatarDiv = document.createElement('div');
+      avatarDiv.id = `remote-avatar-${peerId}`;
+      avatarDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden';
+      avatarDiv.innerHTML = profile.avatar 
+        ? `<img src="${profile.avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700">`
+        : `<div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">${profile.name.charAt(0).toUpperCase()}</div>`;
+
       const label = document.createElement('div');
+      label.id = `remote-label-${peerId}`;
       label.className = 'absolute bottom-3 left-3 bg-slate-950/80 px-3 py-1 rounded-lg border border-slate-800 text-xs font-medium text-white flex items-center space-x-2';
-      label.innerHTML = `<i class="fa-solid fa-user text-emerald-400"></i> <span>Participante</span>`;
+      label.innerHTML = `<i class="fa-solid fa-user text-emerald-400"></i> <span id="remote-name-${peerId}">${profile.name}</span>`;
 
       container.appendChild(video);
+      container.appendChild(avatarDiv);
       container.appendChild(label);
       grid.appendChild(container);
 
       updateParticipantCount();
+    }
+
+    function updateRemoteTileMetadata(peerId, name, avatar) {
+      const nameEl = document.getElementById(`remote-name-${peerId}`);
+      if (nameEl) nameEl.textContent = name;
+
+      const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
+      if (avatarDiv) {
+        avatarDiv.innerHTML = avatar 
+          ? `<img src="${avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700">`
+          : `<div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">${name.charAt(0).toUpperCase()}</div>`;
+      }
     }
 
     function removeRemoteVideo(peerId) {
@@ -736,6 +862,12 @@
       const msg = input.value.trim();
       if (!msg) return;
       appendChatMessage(currentUser.name || 'Você', msg, true);
+      
+      Object.values(activeConnections).forEach(conn => {
+        if (conn && conn.open) {
+          conn.send({ type: 'chat', sender: currentUser.name || 'Usuário', message: msg });
+        }
+      });
       input.value = '';
     }
 
