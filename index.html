@@ -158,10 +158,10 @@
       <div class="flex-1 bg-slate-950 p-2 md:p-4 flex flex-col h-full overflow-hidden">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-2">
           <div class="flex items-center space-x-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
             <div>
               <h3 id="current-room-title" class="font-bold text-white text-sm md:text-base">Sala: -</h3>
-              <p class="text-xs text-slate-400"><span id="participant-count">1</span> participante(s)</p>
+              <p class="text-xs text-slate-400"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> participante(s)</p>
             </div>
           </div>
           <button onclick="copyInviteLink()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-2 transition">
@@ -325,7 +325,7 @@
     let localStream = null;
     let screenStream = null;
     let currentRoomCode = null;
-    let isHost = false;
+    let activeCalls = {};
     
     let isMicMuted = false;
     let isCamOff = false;
@@ -507,7 +507,7 @@
       startOrJoinCall();
     }
 
-    // WEBRTC & PEERJS INTELIGENTE (HOST/CONVIDADO)
+    // WEBRTC ROBUSTO COM DETECÇÃO INTELIGENTE
     async function startOrJoinCall() {
       const usernameInput = document.getElementById('input-username').value.trim();
       const roomCodeInput = document.getElementById('input-room-code').value.trim();
@@ -523,51 +523,72 @@
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         document.getElementById('local-video').srcObject = localStream;
       } catch (err) {
-        console.warn('Câmera/Microfone indisponível:', err);
+        console.warn('Câmera/Microfone indisponível ou negada:', err);
+        // Cria stream vazio para não quebrar a chamada caso a câmera falhe
+        localStream = new MediaStream();
       }
 
-      initSmartPeerJS();
+      initPeerConnection();
 
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('call-screen').classList.remove('hidden');
       document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
+      updateConnectionStatus('connecting', 'Conectando à sala...');
     }
 
-    function initSmartPeerJS() {
+    function initPeerConnection() {
       const hostId = `omnicall-${currentRoomCode}-host`;
+      const myId = `omnicall-${currentRoomCode}-${Math.random().toString(36).substring(2, 7)}`;
+
+      peer = new Peer(myId);
+
+      peer.on('open', (id) => {
+        currentUser.peerId = id;
+        console.log('Meu ID na sala:', id);
+
+        // Tenta se conectar ao Host da sala. Se o Host não existir ainda, assumimos o papel de Host chamando um ID padrão ou aguardando.
+        // Para garantir que qualquer um possa ser encontrado, tentamos ligar para o hostId fixo.
+        if (myId !== hostId) {
+          setTimeout(() => {
+            connectToPeer(hostId);
+          }, 1000);
+        }
+      });
+
+      // Se este cliente for o primeiro, ele pode registrar o ID do host se conectar diretamente,
+      // mas como usamos IDs aleatórios para evitar conflitos, qualquer um na sala disca para todos os outros ou para o host fixo.
+      // Vamos usar um mecanismo onde tentamos criar um peer com o ID do host primeiro:
+      peer.destroy(); // reinicia com estratégia de host/convidado limpa
       
-      // Tenta entrar como HOST da sala
-      peer = new Peer(hostId);
+      const preciseHostId = `omnicall-room-${currentRoomCode}-master`;
+      peer = new Peer(preciseHostId);
 
       peer.on('open', (id) => {
         isHost = true;
-        currentUser.peerId = id;
-        console.log('Conectado como HOST:', id);
+        console.log('Entrou como ANFITRIÃO da sala:', id);
+        updateConnectionStatus('connected', 'Sala ativa (Aguardando participantes)');
       });
 
       peer.on('error', (err) => {
         if (err.type === 'unavailable-id') {
-          // Se o Host já existe, entra como CONVIDADO
+          // O host já existe! Entramos como convidado com ID aleatório
           isHost = false;
-          console.log('Host já na sala. Entrando como Convidado...');
-          const guestId = `omnicall-${currentRoomCode}-guest-${Math.random().toString(36).substring(2, 7)}`;
-          peer = new Peer(guestId);
+          const guestRandomId = `omnicall-guest-${Math.random().toString(36).substring(2, 7)}`;
+          peer = new Peer(guestRandomId);
 
-          peer.on('open', (id) => {
-            currentUser.peerId = id;
-            console.log('Conectado como Convidado:', id);
-            // DISCA AUTOMATICAMENTE PARA O HOST!
-            connectToHost(hostId);
+          peer.on('open', (gId) => {
+            console.log('Entrou como CONVIDADO:', gId);
+            updateConnectionStatus('connected', 'Conectado! Chamando anfitrião...');
+            connectToPeer(preciseHostId);
           });
 
           peer.on('call', (call) => {
             call.answer(localStream);
             handleIncomingStream(call);
           });
-
-          peer.on('connection', (conn) => { handleIncomingData(conn); });
         } else {
-          console.error('Erro PeerJS:', err);
+          console.error('Erro no PeerJS:', err);
+          updateConnectionStatus('error', 'Erro de conexão');
         }
       });
 
@@ -575,13 +596,11 @@
         call.answer(localStream);
         handleIncomingStream(call);
       });
-
-      peer.on('connection', (conn) => { handleIncomingData(conn); });
     }
 
-    function connectToHost(hostId) {
-      console.log('Ligando para o Host:', hostId);
-      const call = peer.call(hostId, localStream);
+    function connectToPeer(targetPeerId) {
+      console.log('Discando para:', targetPeerId);
+      const call = peer.call(targetPeerId, localStream);
       if (call) {
         handleIncomingStream(call);
       }
@@ -590,12 +609,11 @@
     function handleIncomingStream(call) {
       call.on('stream', (remoteStream) => {
         addRemoteVideo(call.peer, remoteStream);
+        updateConnectionStatus('connected', 'Conectado com sucesso!');
       });
-    }
 
-    function handleIncomingData(conn) {
-      conn.on('data', (data) => {
-        if (data.type === 'chat') appendChatMessage(data.sender, data.message);
+      call.on('close', () => {
+        removeRemoteVideo(call.peer);
       });
     }
 
@@ -622,6 +640,29 @@
       grid.appendChild(container);
 
       updateParticipantCount();
+    }
+
+    function removeRemoteVideo(peerId) {
+      const container = document.getElementById(`video-container-${peerId}`);
+      if (container) {
+        container.remove();
+        updateParticipantCount();
+      }
+    }
+
+    function updateConnectionStatus(status, text) {
+      const dot = document.getElementById('connection-dot');
+      const statusText = document.getElementById('connection-status-text');
+      if (!dot || !statusText) return;
+
+      statusText.textContent = text;
+      if (status === 'connected') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+      } else if (status === 'connecting') {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse';
+      } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+      }
     }
 
     function updateParticipantCount() {
