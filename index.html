@@ -328,7 +328,6 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Selecione o Amigo</label>
         <select id="group-friend-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-          <!-- Preenchido via JS -->
         </select>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
@@ -348,9 +347,10 @@
     let localStream = null;
     let screenStream = null;
     let currentRoomCode = null;
-    let activeConnections = {};
-    let remoteProfiles = {};
-    
+    let activeConnections = {}; // peerId -> DataConnection
+    let remoteProfiles = {};    // peerId -> {name, avatar}
+    let roomPeers = new Set();  // Lista de IDs na sala para mesh P2P
+
     let isMicMuted = false;
     let isCamOff = false;
     let isSharingScreen = false;
@@ -605,7 +605,7 @@
       startOrJoinCall();
     }
 
-    // WEBRTC & PEERJS ROBUSTO
+    // ARQUITETURA DE REDE MESH P2P ROBUSTA
     async function startOrJoinCall() {
       const usernameInput = document.getElementById('input-username').value.trim();
       const roomCodeInput = document.getElementById('input-room-code').value.trim();
@@ -628,7 +628,7 @@
         localStream = new MediaStream();
       }
 
-      initPeerConnection();
+      initPeerMesh();
 
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('call-screen').classList.remove('hidden');
@@ -636,37 +636,51 @@
       updateConnectionStatus('connecting', 'Conectando à sala...');
     }
 
-    function initPeerConnection() {
+    function initPeerMesh() {
+      const myUniqueId = `omnicall-${currentRoomCode}-${Math.random().toString(36).substring(2, 8)}`;
       const preciseHostId = `omnicall-room-${currentRoomCode}-master`;
+
       peer = new Peer(peerConfig);
 
       peer.on('open', (id) => {
+        // Tenta registrar como Master Host da sala
         const hostPeer = new Peer(preciseHostId, peerConfig);
-        
+
         hostPeer.on('open', (hId) => {
-          console.log('Conectado como ANFITRIÃO:', hId);
+          console.log('Atuando como Master Host:', hId);
+          currentUser.peerId = hId;
           updateConnectionStatus('connected', 'Sala ativa (Aguardando participantes)');
-          setupPeerListeners(hostPeer);
+          setupPeerEvents(hostPeer);
           peer.destroy();
           peer = hostPeer;
         });
 
         hostPeer.on('error', (err) => {
           if (err.type === 'unavailable-id') {
-            console.log('Host já existe. Entrando como Convidado...');
-            updateConnectionStatus('connected', 'Conectado! Entrando na call...');
-            setupPeerListeners(peer);
-            connectToPeer(preciseHostId);
+            // Master Host já existe. Criamos com ID aleatório e conectamos a ele.
+            const guestPeer = new Peer(myUniqueId, peerConfig);
+            
+            guestPeer.on('open', (gId) => {
+              console.log('Conectado como Convidado:', gId);
+              currentUser.peerId = gId;
+              updateConnectionStatus('connected', 'Conectado! Entrando na call...');
+              setupPeerEvents(guestPeer);
+              
+              // Conecta ao host para entrar na malha
+              connectToPeerAndSync(preciseHostId, guestPeer);
+            });
+
+            peer.destroy();
+            peer = guestPeer;
           }
         });
       });
     }
 
-    function setupPeerListeners(pInstance) {
+    function setupPeerEvents(pInstance) {
       pInstance.on('call', (call) => {
         call.answer(localStream);
         handleIncomingStream(call);
-        setupDataConnection(call.peer);
       });
 
       pInstance.on('connection', (conn) => {
@@ -674,34 +688,50 @@
       });
     }
 
-    function connectToPeer(targetPeerId) {
-      console.log('Ligando para o Host:', targetPeerId);
-      const call = peer.call(targetPeerId, localStream);
-      if (call) {
-        handleIncomingStream(call);
-      }
-      setupDataConnection(targetPeerId);
-    }
+    function connectToPeerAndSync(targetId, pInstance) {
+      const conn = pInstance.connect(targetId);
+      activeConnections[targetId] = conn;
 
-    function setupDataConnection(peerId) {
-      const conn = peer.connect(peerId);
-      activeConnections[peerId] = conn;
       conn.on('open', () => {
-        conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar });
+        conn.send({ type: 'join', peerId: currentUser.peerId, name: currentUser.name, avatar: currentUser.avatar });
       });
+
       conn.on('data', (data) => {
-        handleDataMessage(data, peerId);
+        handleDataMessage(data, targetId, pInstance);
       });
+
+      // Liga o vídeo também
+      const call = pInstance.call(targetId, localStream);
+      if (call) handleIncomingStream(call);
     }
 
     function setupDataReceiver(conn) {
+      const peerId = conn.peer;
+      activeConnections[peerId] = conn;
+
       conn.on('data', (data) => {
-        handleDataMessage(data, conn.peer);
+        handleDataMessage(data, peerId, peer);
       });
     }
 
-    function handleDataMessage(data, peerId) {
-      if (data.type === 'profile') {
+    function handleDataMessage(data, peerId, pInstance) {
+      if (data.type === 'join') {
+        // Se formos o host, recebemos novo membro e propagamos para todos
+        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar };
+        
+        // Faz chamada de vídeo para o novo membro se já não estivermos conectados
+        if (!activeConnections[data.peerId]) {
+          const call = pInstance.call(data.peerId, localStream);
+          if (call) handleIncomingStream(call);
+
+          const conn = pInstance.connect(data.peerId);
+          activeConnections[data.peerId] = conn;
+          conn.on('open', () => {
+            conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar });
+          });
+          conn.on('data', (d) => handleDataMessage(d, data.peerId, pInstance));
+        }
+      } else if (data.type === 'profile') {
         remoteProfiles[peerId] = { name: data.name, avatar: data.avatar };
         updateRemoteTileMetadata(peerId, data.name, data.avatar);
       } else if (data.type === 'chat') {
