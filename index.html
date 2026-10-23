@@ -24,14 +24,15 @@
       onAuthStateChanged 
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-    // 🔴 COLE SUAS CHAVES DO FIREBASE AQUI 🔴
+    // Suas credenciais reais do Firebase
     const firebaseConfig = {
-      apiKey: "SUA_API_KEY",
-      authDomain: "SEU_PROJETO.firebaseapp.com",
-      projectId: "SEU_PROJETO",
-      storageBucket: "SEU_PROJETO.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef"
+      apiKey: "AIzaSyAaaXQzO3XgcpToTSjIoCc5AjsrtJDPxyU",
+      authDomain: "omnicall-b2c87.firebaseapp.com",
+      projectId: "omnicall-b2c87",
+      storageBucket: "omnicall-b2c87.firebasestorage.app",
+      messagingSenderId: "381254948207",
+      appId: "1:381254948207:web:6eeb6839cb9e8a0b89449a",
+      measurementId: "G-7GM9CNWP48"
     };
 
     // Inicializar Firebase
@@ -39,7 +40,7 @@
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
 
-    // Tornar funções acessíveis no escopo global (window)
+    // Funções globais de autenticação
     window.auth = auth;
     window.signInWithGoogle = async () => {
       try {
