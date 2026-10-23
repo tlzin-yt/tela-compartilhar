@@ -11,7 +11,6 @@
   <!-- PeerJS CDN -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <style>
-    /* Custom Scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -26,7 +25,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans h-screen overflow-hidden flex flex-col md:flex-row select-none">
 
-  <!-- MOBILE HEADER (Apenas em telas pequenas) -->
+  <!-- MOBILE HEADER -->
   <div class="md:hidden flex items-center justify-between p-3 bg-slate-900 border-b border-slate-800 z-30">
     <div class="flex items-center space-x-2">
       <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
@@ -46,7 +45,6 @@
 
   <!-- BARRA LATERAL DE NAVEGAÇÃO -->
   <aside id="mobile-sidebar" class="hidden md:flex w-full md:w-80 bg-slate-900/90 border-r border-slate-800/80 flex-col h-full z-20 absolute md:relative inset-0">
-    <!-- Topo da Sidebar -->
     <div class="p-4 border-b border-slate-800 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg font-bold border border-emerald-500/30">
@@ -62,9 +60,7 @@
       </button>
     </div>
 
-    <!-- Lista de Seções / Grupos / Amigos -->
     <div class="flex-1 overflow-y-auto p-3 space-y-6">
-      <!-- Seção: Chamada Instantânea -->
       <div>
         <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">Salas Rápidas</div>
         <button onclick="showQuickCallSection()" class="w-full flex items-center space-x-3 p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition">
@@ -73,7 +69,6 @@
         </button>
       </div>
 
-      <!-- Seção: Grupos -->
       <div>
         <div class="flex items-center justify-between mb-2 px-2">
           <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Grupos</span>
@@ -84,19 +79,17 @@
         </div>
       </div>
 
-      <!-- Seção: Amigos -->
       <div>
         <div class="flex items-center justify-between mb-2 px-2">
           <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Amigos</span>
           <span id="friends-count" class="text-xs text-slate-500">0</span>
         </div>
         <div id="friends-list" class="space-y-1">
-          <p id="no-friends-msg" class="text-xs text-slate-500 italic px-2">Sua lista está vazia. Adicione amigos usando o ID deles!</p>
+          <p id="no-friends-msg" class="text-xs text-slate-500 italic px-2">Sua lista está vazia.</p>
         </div>
       </div>
     </div>
 
-    <!-- Rodapé: Perfil do Usuário -->
     <div class="p-3 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between">
       <div class="flex items-center space-x-3 overflow-hidden cursor-pointer" onclick="openProfileModal()">
         <div class="relative flex-shrink-0">
@@ -109,7 +102,7 @@
           <div id="my-sidebar-bio" class="text-xs text-slate-400 truncate">Clique para editar perfil</div>
         </div>
       </div>
-      <button onclick="openProfileModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Configurações de Perfil">
+      <button onclick="openProfileModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Configurações">
         <i class="fa-solid fa-gear"></i>
       </button>
     </div>
@@ -118,7 +111,7 @@
   <!-- ÁREA PRINCIPAL -->
   <main class="flex-1 flex flex-col h-full bg-slate-950 relative overflow-hidden">
     
-    <!-- TELA DE ENTRADA / SETUP DA CALL (QUANDO FORA DE UMA CALL) -->
+    <!-- TELA DE SETUP -->
     <div id="setup-screen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
       <div class="max-w-md w-full glass-panel p-6 md:p-8 rounded-2xl shadow-2xl space-y-6 my-auto">
         <div class="text-center space-y-2">
@@ -126,7 +119,7 @@
             <i class="fa-solid fa-bolt"></i>
           </div>
           <h2 class="text-2xl font-bold text-white">Iniciar Call Sem Limites</h2>
-          <p class="text-xs md:text-sm text-slate-400">Conexão direta P2P. Compartilhe sua tela, converse com áudio/vídeo e envie mensagens.</p>
+          <p class="text-xs md:text-sm text-slate-400">Conexão direta P2P. Compartilhe sua tela, converse com áudio/vídeo.</p>
         </div>
 
         <div class="space-y-4">
@@ -157,21 +150,12 @@
             </button>
           </div>
         </div>
-
-        <div class="text-center">
-          <span class="inline-flex items-center space-x-2 text-xs text-slate-500">
-            <i class="fa-solid fa-lock"></i>
-            <span>Criptografia P2P via WebRTC</span>
-          </span>
-        </div>
       </div>
     </div>
 
-    <!-- PAINEL DA CHAMADA ATIVA (OCULTO POR PADRÃO) -->
+    <!-- PAINEL DA CHAMADA ATIVA -->
     <div id="call-screen" class="hidden flex-1 flex flex-col md:flex-row h-full overflow-hidden">
-      <!-- Área de Grade de Vídeos -->
       <div class="flex-1 bg-slate-950 p-2 md:p-4 flex flex-col h-full overflow-hidden">
-        <!-- Topo da Sala -->
         <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-2">
           <div class="flex items-center space-x-3">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -180,23 +164,19 @@
               <p class="text-xs text-slate-400"><span id="participant-count">1</span> participante(s)</p>
             </div>
           </div>
-          <div class="flex items-center space-x-2">
-            <button onclick="copyInviteLink()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-2 transition">
-              <i class="fa-solid fa-link"></i>
-              <span class="hidden sm:inline">Copiar Link de Convite</span>
-            </button>
-          </div>
+          <button onclick="copyInviteLink()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-2 transition">
+            <i class="fa-solid fa-link"></i>
+            <span class="hidden sm:inline">Copiar Link de Convite</span>
+          </button>
         </div>
 
-        <!-- Grade de Vídeo dos Participantes -->
         <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto p-1 items-center justify-center">
           <!-- Vídeo Local -->
           <div id="local-video-container" class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden aspect-video flex items-center justify-center group shadow-lg">
             <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
             <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden">
-              <img id="local-placeholder-img" src="" class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-slate-700 hidden">
-              <div id="local-placeholder-fallback" class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">?</div>
-              <span id="local-placeholder-name" class="text-sm font-semibold text-slate-300">Você</span>
+              <img id="local-placeholder-img" src="" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700 hidden">
+              <div id="local-placeholder-fallback" class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">?</div>
             </div>
             <div class="absolute bottom-3 left-3 bg-slate-950/80 px-3 py-1 rounded-lg border border-slate-800 text-xs font-medium text-white flex items-center space-x-2">
               <i class="fa-solid fa-user text-emerald-400"></i>
@@ -205,7 +185,7 @@
           </div>
         </div>
 
-        <!-- Barra de Controles da Chamada -->
+        <!-- Controles -->
         <div class="pt-3 border-t border-slate-800/80 flex items-center justify-center space-x-3 md:space-x-4">
           <button id="btn-toggle-mic" onclick="toggleMic()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-lg transition shadow-md">
             <i class="fa-solid fa-microphone"></i>
@@ -213,16 +193,16 @@
           <button id="btn-toggle-cam" onclick="toggleCam()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-lg transition shadow-md">
             <i class="fa-solid fa-video"></i>
           </button>
-          <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-12 h-12 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-lg transition shadow-md" title="Compartilhar Tela">
+          <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-12 h-12 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-lg transition shadow-md" title="Tela">
             <i class="fa-solid fa-desktop"></i>
           </button>
-          <button onclick="leaveCall()" class="w-12 h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-lg transition shadow-md shadow-rose-500/20" title="Sair da Chamada">
+          <button onclick="leaveCall()" class="w-12 h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-lg transition shadow-md" title="Sair">
             <i class="fa-solid fa-phone-slash"></i>
           </button>
         </div>
       </div>
 
-      <!-- Chat Lateral da Chamada -->
+      <!-- Chat -->
       <div id="call-chat-panel" class="w-full md:w-80 bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col h-64 md:h-full">
         <div class="p-3 border-b border-slate-800 flex items-center justify-between">
           <span class="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center space-x-2">
@@ -245,7 +225,7 @@
     </div>
   </main>
 
-  <!-- BARRA DE NAVEGAÇÃO MOBILE (RODAPÉ DO CELULAR) -->
+  <!-- MOBILE NAV -->
   <div class="md:hidden flex bg-slate-900 border-t border-slate-800 justify-around p-2 z-30">
     <button onclick="toggleMobileSection('sidebar')" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 text-xs">
       <i class="fa-solid fa-users text-lg"></i>
@@ -261,47 +241,40 @@
     </button>
   </div>
 
-  <!-- MODAL: PERFIL DO USUÁRIO -->
+  <!-- MODAL: PERFIL -->
   <div id="modal-profile" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-5">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="font-bold text-white text-lg">Editar Meu Perfil</h3>
         <button onclick="closeModal('modal-profile')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
       <div class="space-y-4">
         <div class="flex flex-col items-center space-y-3">
           <div class="relative">
             <img id="profile-modal-preview" src="" class="w-20 h-20 rounded-full object-cover bg-slate-800 border-2 border-emerald-500/50 hidden">
             <div id="profile-modal-preview-fallback" class="w-20 h-20 rounded-full bg-slate-800 border-2 border-emerald-500/50 flex items-center justify-center text-2xl font-bold text-white">?</div>
           </div>
-          <div class="flex items-center space-x-2">
-            <label class="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-lg border border-slate-700 transition">
-              <i class="fa-solid fa-upload mr-1"></i> Galeria
-              <input type="file" id="profile-file-input" accept="image/*" class="hidden" onchange="handleProfileImageUpload(event)">
-            </label>
-          </div>
+          <label class="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-lg border border-slate-700 transition">
+            <i class="fa-solid fa-upload mr-1"></i> Galeria
+            <input type="file" id="profile-file-input" accept="image/*" class="hidden" onchange="handleProfileImageUpload(event)">
+          </label>
         </div>
-
         <div>
           <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome de Usuário</label>
-          <input type="text" id="profile-name-input" placeholder="Seu nome..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+          <input type="text" id="profile-name-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
         </div>
-
         <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">URL da Foto de Perfil (Opcional)</label>
-          <input type="text" id="profile-avatar-input" placeholder="https://exemplo.com/foto.jpg" onchange="updateProfileAvatarPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">URL da Foto (Opcional)</label>
+          <input type="text" id="profile-avatar-input" onchange="updateProfileAvatarPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
         </div>
-
         <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Biografia (Bio)</label>
-          <textarea id="profile-bio-input" rows="2" placeholder="Fale um pouco sobre você..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Biografia</label>
+          <textarea id="profile-bio-input" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
         </div>
       </div>
-
       <div class="flex justify-end space-x-3 pt-2">
         <button onclick="closeModal('modal-profile')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="saveProfile()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Salvar Alterações</button>
+        <button onclick="saveProfile()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Salvar</button>
       </div>
     </div>
   </div>
@@ -315,7 +288,7 @@
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">ID do Amigo</label>
-        <input type="text" id="friend-id-input" placeholder="Cole o ID ou nome do amigo..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <input type="text" id="friend-id-input" placeholder="ID ou nome..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('modal-add-friend')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
@@ -328,62 +301,46 @@
   <div id="modal-create-group" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-white text-base">Criar Novo Grupo</h3>
+        <h3 class="font-bold text-white text-base">Criar Grupo</h3>
         <button onclick="closeModal('modal-create-group')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome do Grupo</label>
-        <input type="text" id="group-name-input" placeholder="Ex: Galera do Game" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <input type="text" id="group-name-input" placeholder="Ex: Galera" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('modal-create-group')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="createGroup()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Criar Grupo</button>
+        <button onclick="createGroup()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Criar</button>
       </div>
     </div>
   </div>
 
-  <!-- SCRIPT DA APLICAÇÃO -->
+  <!-- SCRIPT -->
   <script>
-    // ESTADO GLOBAL DA APLICAÇÃO
-    let currentUser = {
-      name: '',
-      avatar: '',
-      bio: '',
-      peerId: ''
-    };
-
+    let currentUser = { name: '', avatar: '', bio: '', peerId: '' };
     let friendsList = [];
     let groupsList = [];
     
     let peer = null;
     let localStream = null;
     let screenStream = null;
-    let activeCalls = {};
-    let activeConnections = {};
     let currentRoomCode = null;
+    let isHost = false;
     
     let isMicMuted = false;
     let isCamOff = false;
     let isSharingScreen = false;
 
-    // INICIALIZAÇÃO
     window.addEventListener('DOMContentLoaded', () => {
       loadUserData();
       checkUrlParams();
     });
 
-    // CARREGAR DADOS DO USUÁRIO SALVO OU INICIAR LIMPO
     function loadUserData() {
       const savedUser = localStorage.getItem('omnicall_user');
-      if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-      } else {
-        currentUser = { name: '', avatar: '', bio: '' };
-      }
-
+      if (savedUser) currentUser = JSON.parse(savedUser);
       const savedFriends = localStorage.getItem('omnicall_friends');
       if (savedFriends) friendsList = JSON.parse(savedFriends);
-
       const savedGroups = localStorage.getItem('omnicall_groups');
       if (savedGroups) groupsList = JSON.parse(savedGroups);
 
@@ -402,7 +359,6 @@
     function updateUserUI() {
       const nameInput = document.getElementById('input-username');
       if (nameInput) nameInput.value = currentUser.name || '';
-
       const sidebarName = document.getElementById('my-sidebar-name');
       const sidebarBio = document.getElementById('my-sidebar-bio');
       const sidebarAvatar = document.getElementById('my-sidebar-avatar');
@@ -421,35 +377,21 @@
           sidebarFallback.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
         }
       }
-
-      // Atualizar placeholders locais
-      const localLabelName = document.getElementById('local-label-name');
-      if (localLabelName) localLabelName.textContent = currentUser.name || 'Você';
     }
 
-    // CHECK SE VEIO LINK DE CONVITE COM PARÂMETRO ?sala=
     function checkUrlParams() {
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('sala');
-      if (roomParam) {
-        document.getElementById('input-room-code').value = roomParam;
-      }
+      if (roomParam) document.getElementById('input-room-code').value = roomParam;
     }
 
-    // GERAR SALA ALEATÓRIA
     function generateRandomRoom() {
       const code = 'sala-' + Math.random().toString(36).substring(2, 8);
       document.getElementById('input-room-code').value = code;
     }
 
-    // ABRIR/FECHAR MODAIS
-    function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-    }
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
     function openProfileModal() {
       document.getElementById('profile-name-input').value = currentUser.name || '';
@@ -463,10 +405,8 @@
       const url = document.getElementById('profile-avatar-input').value;
       const previewImg = document.getElementById('profile-modal-preview');
       const previewFallback = document.getElementById('profile-modal-preview-fallback');
-
       if (url) {
-        previewImg.src = url;
-        previewImg.classList.remove('hidden');
+        previewImg.src = url; previewImg.classList.remove('hidden');
         previewFallback.classList.add('hidden');
       } else {
         previewImg.classList.add('hidden');
@@ -492,12 +432,10 @@
       currentUser.name = document.getElementById('profile-name-input').value.trim() || 'Usuário';
       currentUser.avatar = document.getElementById('profile-avatar-input').value.trim();
       currentUser.bio = document.getElementById('profile-bio-input').value.trim();
-      
       saveUserData();
       closeModal('modal-profile');
     }
 
-    // SISTEMA DE AMIGOS E GRUPOS
     function addFriend() {
       const friendId = document.getElementById('friend-id-input').value.trim();
       if (friendId && !friendsList.includes(friendId)) {
@@ -511,28 +449,21 @@
 
     function renderFriendsList() {
       const listEl = document.getElementById('friends-list');
-      const countEl = document.getElementById('friends-count');
-      countEl.textContent = friendsList.length;
-
+      document.getElementById('friends-count').textContent = friendsList.length;
       if (friendsList.length === 0) {
-        listEl.innerHTML = '<p class="text-xs text-slate-500 italic px-2">Sua lista está vazia. Adicione amigos usando o ID deles!</p>';
+        listEl.innerHTML = '<p class="text-xs text-slate-500 italic px-2">Sua lista está vazia.</p>';
         return;
       }
-
       listEl.innerHTML = '';
       friendsList.forEach(friend => {
         const item = document.createElement('div');
         item.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-slate-800/60 transition cursor-pointer';
         item.innerHTML = `
           <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-300">
-              ${friend.charAt(0).toUpperCase()}
-            </div>
+            <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-300">${friend.charAt(0).toUpperCase()}</div>
             <span class="text-xs font-medium text-slate-200">${friend}</span>
           </div>
-          <button onclick="startCallWithCode('${friend}')" class="p-1.5 text-slate-400 hover:text-emerald-400" title="Chamar">
-            <i class="fa-solid fa-phone text-xs"></i>
-          </button>
+          <button onclick="startCallWithCode('${friend}')" class="p-1.5 text-slate-400 hover:text-emerald-400"><i class="fa-solid fa-phone text-xs"></i></button>
         `;
         listEl.appendChild(item);
       });
@@ -541,8 +472,7 @@
     function createGroup() {
       const groupName = document.getElementById('group-name-input').value.trim();
       if (groupName) {
-        const groupId = 'grupo-' + Math.random().toString(36).substring(2, 8);
-        groupsList.push({ id: groupId, name: groupName });
+        groupsList.push({ id: 'grupo-' + Math.random().toString(36).substring(2, 8), name: groupName });
         saveUserData();
         renderGroupsList();
         document.getElementById('group-name-input').value = '';
@@ -556,7 +486,6 @@
         listEl.innerHTML = '<p class="text-xs text-slate-500 italic px-2">Nenhum grupo criado.</p>';
         return;
       }
-
       listEl.innerHTML = '';
       groupsList.forEach(group => {
         const item = document.createElement('div');
@@ -564,9 +493,7 @@
         item.onclick = () => startCallWithCode(group.id);
         item.innerHTML = `
           <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
-              #
-            </div>
+            <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">#</div>
             <span class="text-xs font-medium text-slate-200">${group.name}</span>
           </div>
           <i class="fa-solid fa-chevron-right text-xs text-slate-600"></i>
@@ -580,50 +507,68 @@
       startOrJoinCall();
     }
 
-    // RECURSOS DE CHAMADA WEBRTC
+    // WEBRTC & PEERJS INTELIGENTE (HOST/CONVIDADO)
     async function startOrJoinCall() {
       const usernameInput = document.getElementById('input-username').value.trim();
       const roomCodeInput = document.getElementById('input-room-code').value.trim();
 
-      if (!usernameInput) {
-        alert('Por favor, informe seu nome antes de entrar.');
-        return;
-      }
-
-      if (!roomCodeInput) {
-        alert('Por favor, informe um código de sala.');
-        return;
-      }
+      if (!usernameInput) { alert('Informe seu nome.'); return; }
+      if (!roomCodeInput) { alert('Informe o código da sala.'); return; }
 
       currentUser.name = usernameInput;
       currentRoomCode = roomCodeInput;
       saveUserData();
 
-      // Solicitar Mídia
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         document.getElementById('local-video').srcObject = localStream;
       } catch (err) {
-        console.warn('Não foi possível acessar a câmera/microfone:', err);
-        alert('Atenção: Não foi possível acessar sua câmera/microfone, mas você poderá participar e compartilhar tela.');
+        console.warn('Câmera/Microfone indisponível:', err);
       }
 
-      // Conectar PeerJS
-      initPeerJS();
+      initSmartPeerJS();
 
-      // Transição de Telas
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('call-screen').classList.remove('hidden');
       document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
     }
 
-    function initPeerJS() {
-      const customPeerId = currentRoomCode + '-' + Math.random().toString(36).substring(2, 7);
-      peer = new Peer(customPeerId);
+    function initSmartPeerJS() {
+      const hostId = `omnicall-${currentRoomCode}-host`;
+      
+      // Tenta entrar como HOST da sala
+      peer = new Peer(hostId);
 
       peer.on('open', (id) => {
+        isHost = true;
         currentUser.peerId = id;
-        console.log('Meu Peer ID:', id);
+        console.log('Conectado como HOST:', id);
+      });
+
+      peer.on('error', (err) => {
+        if (err.type === 'unavailable-id') {
+          // Se o Host já existe, entra como CONVIDADO
+          isHost = false;
+          console.log('Host já na sala. Entrando como Convidado...');
+          const guestId = `omnicall-${currentRoomCode}-guest-${Math.random().toString(36).substring(2, 7)}`;
+          peer = new Peer(guestId);
+
+          peer.on('open', (id) => {
+            currentUser.peerId = id;
+            console.log('Conectado como Convidado:', id);
+            // DISCA AUTOMATICAMENTE PARA O HOST!
+            connectToHost(hostId);
+          });
+
+          peer.on('call', (call) => {
+            call.answer(localStream);
+            handleIncomingStream(call);
+          });
+
+          peer.on('connection', (conn) => { handleIncomingData(conn); });
+        } else {
+          console.error('Erro PeerJS:', err);
+        }
       });
 
       peer.on('call', (call) => {
@@ -631,9 +576,15 @@
         handleIncomingStream(call);
       });
 
-      peer.on('connection', (conn) => {
-        handleIncomingData(conn);
-      });
+      peer.on('connection', (conn) => { handleIncomingData(conn); });
+    }
+
+    function connectToHost(hostId) {
+      console.log('Ligando para o Host:', hostId);
+      const call = peer.call(hostId, localStream);
+      if (call) {
+        handleIncomingStream(call);
+      }
     }
 
     function handleIncomingStream(call) {
@@ -644,9 +595,7 @@
 
     function handleIncomingData(conn) {
       conn.on('data', (data) => {
-        if (data.type === 'chat') {
-          appendChatMessage(data.sender, data.message);
-        }
+        if (data.type === 'chat') appendChatMessage(data.sender, data.message);
       });
     }
 
@@ -680,7 +629,6 @@
       document.getElementById('participant-count').textContent = count;
     }
 
-    // MUTE/CAM CONTROLS
     function toggleMic() {
       if (!localStream) return;
       const audioTrack = localStream.getAudioTracks()[0];
@@ -700,13 +648,7 @@
         isCamOff = !videoTrack.enabled;
         const btn = document.getElementById('btn-toggle-cam');
         btn.innerHTML = isCamOff ? '<i class="fa-solid fa-video-slash text-rose-500"></i>' : '<i class="fa-solid fa-video"></i>';
-        
-        const avatarPlaceholder = document.getElementById('local-avatar-placeholder');
-        if (isCamOff) {
-          avatarPlaceholder.classList.remove('hidden');
-        } else {
-          avatarPlaceholder.classList.add('hidden');
-        }
+        document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
       }
     }
 
@@ -715,68 +657,43 @@
         try {
           screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
           const screenTrack = screenStream.getVideoTracks()[0];
-          
           document.getElementById('local-video').srcObject = screenStream;
           isSharingScreen = true;
-
-          screenTrack.onended = () => {
-            stopScreenShare();
-          };
-        } catch (err) {
-          console.error('Erro ao compartilhar tela:', err);
-        }
-      } else {
-        stopScreenShare();
-      }
+          screenTrack.onended = () => { stopScreenShare(); };
+        } catch (err) { console.error(err); }
+      } else { stopScreenShare(); }
     }
 
     function stopScreenShare() {
-      if (screenStream) {
-        screenStream.getTracks().forEach(track => track.stop());
-      }
+      if (screenStream) screenStream.getTracks().forEach(t => t.stop());
       document.getElementById('local-video').srcObject = localStream;
       isSharingScreen = false;
     }
 
-    // COPIAR LINK DE CONVITE REAL
     function copyInviteLink() {
-      const currentUrl = window.location.origin + window.location.pathname;
-      const inviteUrl = `${currentUrl}?sala=${encodeURIComponent(currentRoomCode)}`;
-      
+      const inviteUrl = `${window.location.origin}${window.location.pathname}?sala=${encodeURIComponent(currentRoomCode)}`;
       navigator.clipboard.writeText(inviteUrl).then(() => {
-        alert('Link de convite copiado para a área de transferência:\n' + inviteUrl);
-      }).catch(() => {
-        prompt('Copie o link de convite abaixo:', inviteUrl);
+        alert('Link copiado: ' + inviteUrl);
       });
     }
 
-    // SAIR DA CHAMADA
     function leaveCall() {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      if (peer) {
-        peer.destroy();
-      }
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (peer) peer.destroy();
 
       document.getElementById('call-screen').classList.add('hidden');
       document.getElementById('setup-screen').classList.remove('hidden');
       
-      // Limpar grade de vídeos extras
       const grid = document.getElementById('video-grid');
-      while (grid.children.length > 1) {
-        grid.removeChild(grid.lastChild);
-      }
+      while (grid.children.length > 1) { grid.removeChild(grid.lastChild); }
       updateParticipantCount();
     }
 
-    // CHAT
     function sendChatMessage(e) {
       e.preventDefault();
       const input = document.getElementById('chat-input');
       const msg = input.value.trim();
       if (!msg) return;
-
       appendChatMessage(currentUser.name || 'Você', msg, true);
       input.value = '';
     }
@@ -785,24 +702,18 @@
       const chatContainer = document.getElementById('chat-messages');
       const msgDiv = document.createElement('div');
       msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`;
-
       msgDiv.innerHTML = `
         <span class="text-[10px] text-slate-500 px-1">${sender}</span>
-        <div class="max-w-[85%] px-3 py-2 rounded-2xl text-xs ${isMe ? 'bg-emerald-500 text-slate-950 font-medium rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}">
-          ${message}
-        </div>
+        <div class="max-w-[85%] px-3 py-2 rounded-2xl text-xs ${isMe ? 'bg-emerald-500 text-slate-950 font-medium rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}">${message}</div>
       `;
-
       chatContainer.appendChild(msgDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // NAVEGAÇÃO MOBILE
     function toggleMobileSection(section) {
       const sidebar = document.getElementById('mobile-sidebar');
-      if (section === 'sidebar') {
-        sidebar.classList.toggle('hidden');
-      } else if (section === 'setup') {
+      if (section === 'sidebar') sidebar.classList.toggle('hidden');
+      else if (section === 'setup') {
         sidebar.classList.add('hidden');
         document.getElementById('setup-screen').classList.remove('hidden');
         document.getElementById('call-screen').classList.add('hidden');
