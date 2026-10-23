@@ -10,6 +10,100 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- PeerJS CDN -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- Firebase App & Auth SDK (v10) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithPopup, 
+      GoogleAuthProvider, 
+      createUserWithEmailAndPassword, 
+      signInWithEmailAndPassword, 
+      signOut, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+    // 🔴 COLE SUAS CHAVES DO FIREBASE AQUI 🔴
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_PROJETO.firebaseapp.com",
+      projectId: "SEU_PROJETO",
+      storageBucket: "SEU_PROJETO.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // Tornar funções acessíveis no escopo global (window)
+    window.auth = auth;
+    window.signInWithGoogle = async () => {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        window.handleLoginSuccess({
+          name: user.displayName || 'Usuário',
+          email: user.email,
+          avatar: user.photoURL || ''
+        });
+      } catch (error) {
+        alert("Erro no login com Google: " + error.message);
+      }
+    };
+
+    window.loginWithEmail = async (email, password) => {
+      try {
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        const user = result.user;
+        window.handleLoginSuccess({
+          name: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          avatar: user.photoURL || ''
+        });
+      } catch (error) {
+        alert("Erro ao entrar: " + error.message);
+      }
+    };
+
+    window.registerWithEmail = async (email, password) => {
+      try {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        const user = result.user;
+        window.handleLoginSuccess({
+          name: user.email.split('@')[0],
+          email: user.email,
+          avatar: ''
+        });
+      } catch (error) {
+        alert("Erro ao registar: " + error.message);
+      }
+    };
+
+    window.logoutUser = async () => {
+      await signOut(auth);
+      localStorage.removeItem('omnicall_user');
+      window.location.reload();
+    };
+
+    // Detetar sessão de utilizador existente
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.handleLoginSuccess({
+          name: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          avatar: user.photoURL || ''
+        }, false);
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('setup-screen').classList.add('hidden');
+      }
+    });
+  </script>
+
   <style>
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
@@ -104,8 +198,8 @@
           <div id="my-sidebar-bio" class="text-xs text-slate-400 truncate">Clique para editar perfil</div>
         </div>
       </div>
-      <button onclick="openProfileModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Configurações">
-        <i class="fa-solid fa-gear"></i>
+      <button onclick="window.logoutUser()" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Sair da Conta">
+        <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
   </aside>
@@ -113,8 +207,50 @@
   <!-- ÁREA PRINCIPAL -->
   <main class="flex-1 flex flex-col h-full bg-slate-950 relative overflow-hidden">
     
-    <!-- TELA DE SETUP -->
-    <div id="setup-screen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
+    <!-- TELA DE LOGIN / CADASTRO -->
+    <div id="auth-screen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
+      <div class="max-w-md w-full glass-panel p-6 md:p-8 rounded-2xl shadow-2xl space-y-6 my-auto">
+        <div class="text-center space-y-2">
+          <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white">Bem-vindo ao OmniCall</h2>
+          <p class="text-xs md:text-sm text-slate-400">Faça login para salvar seus contatos, grupos e perfil.</p>
+        </div>
+
+        <!-- Botão Google -->
+        <button onclick="window.signInWithGoogle()" class="w-full py-3 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-sm transition flex items-center justify-center space-x-3 shadow-md">
+          <i class="fa-brands fa-google text-lg text-rose-500"></i>
+          <span>Entrar com a Conta Google</span>
+        </button>
+
+        <div class="flex items-center my-4">
+          <div class="flex-1 border-t border-slate-800"></div>
+          <span class="px-3 text-xs text-slate-500 font-semibold uppercase">ou e-mail</span>
+          <div class="flex-1 border-t border-slate-800"></div>
+        </div>
+
+        <!-- Form E-mail -->
+        <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">E-mail</label>
+            <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Senha</label>
+            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-2">
+            <button type="button" onclick="handleRegister()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition">Criar Conta</button>
+            <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- TELA DE SETUP DA SALA -->
+    <div id="setup-screen" class="hidden flex-1 flex items-center justify-center p-4 overflow-y-auto">
       <div class="max-w-md w-full glass-panel p-6 md:p-8 rounded-2xl shadow-2xl space-y-6 my-auto">
         <div class="text-center space-y-2">
           <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30">
@@ -243,6 +379,7 @@
     </button>
   </div>
 
+  <!-- MODAIS -->
   <!-- MODAL: PERFIL -->
   <div id="modal-profile" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-5">
@@ -337,7 +474,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT -->
+  <!-- SCRIPT APLICAÇÃO -->
   <script>
     let currentUser = { name: '', avatar: '', bio: '', peerId: '' };
     let friendsList = [];
@@ -347,9 +484,8 @@
     let localStream = null;
     let screenStream = null;
     let currentRoomCode = null;
-    let activeConnections = {}; // peerId -> DataConnection
-    let remoteProfiles = {};    // peerId -> {name, avatar}
-    let roomPeers = new Set();  // Lista de IDs na sala para mesh P2P
+    let activeConnections = {};
+    let remoteProfiles = {};
 
     let isMicMuted = false;
     let isCamOff = false;
@@ -364,10 +500,30 @@
       }
     };
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadUserData();
-      checkUrlParams();
-    });
+    window.handleLoginSuccess = function(userData, save = true) {
+      currentUser.name = userData.name;
+      currentUser.avatar = userData.avatar;
+      if (save) {
+        localStorage.setItem('omnicall_user', JSON.stringify(currentUser));
+      }
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('setup-screen').classList.remove('hidden');
+      updateUserUI();
+    };
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-password').value;
+      window.loginWithEmail(email, pass);
+    }
+
+    function handleRegister() {
+      const email = document.getElementById('auth-email').value;
+      const pass = document.getElementById('auth-password').value;
+      if (!email || !pass) { alert("Preencha o e-mail e a senha."); return; }
+      window.registerWithEmail(email, pass);
+    }
 
     function loadUserData() {
       const savedUser = localStorage.getItem('omnicall_user');
@@ -605,7 +761,6 @@
       startOrJoinCall();
     }
 
-    // ARQUITETURA DE REDE MESH P2P ROBUSTA
     async function startOrJoinCall() {
       const usernameInput = document.getElementById('input-username').value.trim();
       const roomCodeInput = document.getElementById('input-room-code').value.trim();
@@ -643,11 +798,9 @@
       peer = new Peer(peerConfig);
 
       peer.on('open', (id) => {
-        // Tenta registrar como Master Host da sala
         const hostPeer = new Peer(preciseHostId, peerConfig);
 
         hostPeer.on('open', (hId) => {
-          console.log('Atuando como Master Host:', hId);
           currentUser.peerId = hId;
           updateConnectionStatus('connected', 'Sala ativa (Aguardando participantes)');
           setupPeerEvents(hostPeer);
@@ -657,19 +810,13 @@
 
         hostPeer.on('error', (err) => {
           if (err.type === 'unavailable-id') {
-            // Master Host já existe. Criamos com ID aleatório e conectamos a ele.
             const guestPeer = new Peer(myUniqueId, peerConfig);
-            
             guestPeer.on('open', (gId) => {
-              console.log('Conectado como Convidado:', gId);
               currentUser.peerId = gId;
               updateConnectionStatus('connected', 'Conectado! Entrando na call...');
               setupPeerEvents(guestPeer);
-              
-              // Conecta ao host para entrar na malha
               connectToPeerAndSync(preciseHostId, guestPeer);
             });
-
             peer.destroy();
             peer = guestPeer;
           }
@@ -700,7 +847,6 @@
         handleDataMessage(data, targetId, pInstance);
       });
 
-      // Liga o vídeo também
       const call = pInstance.call(targetId, localStream);
       if (call) handleIncomingStream(call);
     }
@@ -716,10 +862,8 @@
 
     function handleDataMessage(data, peerId, pInstance) {
       if (data.type === 'join') {
-        // Se formos o host, recebemos novo membro e propagamos para todos
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar };
         
-        // Faz chamada de vídeo para o novo membro se já não estivermos conectados
         if (!activeConnections[data.peerId]) {
           const call = pInstance.call(data.peerId, localStream);
           if (call) handleIncomingStream(call);
