@@ -115,6 +115,7 @@
         document.getElementById('step-profile').classList.add('hidden');
         document.getElementById('step-room').classList.add('hidden');
         document.getElementById('step-call').classList.add('hidden');
+        document.getElementById('step-waiting').classList.add('hidden');
       }
     });
   </script>
@@ -124,12 +125,6 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-    
-    .glass-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(226, 232, 240, 0.9);
-    }
 
     .btn-press {
       transition: transform 0.1s ease, background-color 0.2s ease;
@@ -265,6 +260,22 @@
     </div>
   </div>
 
+  <!-- TELA DE ESPERA / APROVAÇÃO (ESTILO GOOGLE MEET) -->
+  <div id="step-waiting" class="hidden w-full max-w-md px-4 z-30">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl space-y-6 text-center">
+      <div class="w-16 h-16 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-blue-500/30 animate-pulse">
+        <i class="fa-solid fa-user-clock"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight mb-2">Pedi permissão para entrar...</h2>
+        <p class="text-xs text-slate-400">Aguarde o anfitrião permitir sua entrada na chamada.</p>
+      </div>
+      <button onclick="cancelJoinRequest()" class="btn-press w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl text-xs transition border border-slate-700">
+        Cancelar Pedido
+      </button>
+    </div>
+  </div>
+
   <!-- ETAPA 4: TELA DA CALL -->
   <div id="step-call" class="hidden fixed inset-0 bg-slate-950 flex flex-col z-30">
     <!-- Topbar da Call -->
@@ -276,14 +287,10 @@
           <p class="text-[11px] text-slate-400"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> pessoa(s)</p>
         </div>
       </div>
-      <button onclick="copyInviteLink()" class="btn-press px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-2 border border-slate-700">
-        <i class="fa-solid fa-link text-blue-400"></i>
-        <span>Copiar Link do Anfitrião</span>
-      </button>
     </div>
 
     <!-- Grid de Vídeos -->
-    <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 overflow-y-auto items-center justify-center max-w-7xl mx-auto w-full">
+    <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 overflow-y-auto items-center justify-center max-w-7xl mx-auto w-full relative">
       <div id="local-video-container" class="relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl">
         <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
         <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3">
@@ -295,6 +302,47 @@
           <span id="local-mic-icon" class="text-rose-400 hidden" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
           <span id="local-label-name">Você</span>
         </div>
+      </div>
+    </div>
+
+    <!-- CARD FLUTUANTE ESTILO GOOGLE MEET: "Sua reunião está pronta" -->
+    <div id="meet-invite-card" class="hidden absolute bottom-24 left-6 w-80 bg-white text-slate-800 rounded-2xl shadow-2xl p-5 border border-slate-200 z-40 transition-all duration-300">
+      <div class="flex items-center justify-between mb-3">
+        <h4 class="font-bold text-slate-900 text-sm">Sua reunião está pronta</h4>
+        <button onclick="closeMeetInviteCard()" class="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 mb-3">Ou compartilhe este link da reunião com quem você quer que participe</p>
+      <div class="flex items-center justify-between bg-slate-100 rounded-xl px-3 py-2.5 mb-4 border border-slate-200">
+        <span id="meet-invite-url" class="text-xs text-slate-700 font-medium truncate mr-2 select-all"></span>
+        <button onclick="copyMeetInviteUrl()" class="text-slate-600 hover:text-blue-600 text-sm transition p-1" title="Copiar link">
+          <i class="fa-regular fa-copy"></i>
+        </button>
+      </div>
+      <div class="flex items-start space-x-2.5 mb-3 bg-blue-50 p-2.5 rounded-xl border border-blue-100">
+        <div class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <p class="text-[11px] text-blue-900 leading-tight">As pessoas que usarem este link da reunião precisarão receber sua permissão para participar.</p>
+      </div>
+      <p class="text-[11px] text-slate-400 truncate">Participando como <span id="meet-user-email-label" class="font-semibold text-slate-600"></span></p>
+    </div>
+
+    <!-- NOTIFICAÇÃO DE SOLICITAÇÃO DE ENTRADA DO ANFITRIÃO -->
+    <div id="approval-modal" class="hidden absolute top-20 right-6 w-96 bg-slate-900 border border-slate-700 text-white rounded-2xl shadow-2xl p-4 z-50 animate-bounce-short">
+      <div class="flex items-center space-x-3 mb-3">
+        <div class="w-10 h-10 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center text-lg shrink-0">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-sm text-white">Alguém quer participar</h4>
+          <p id="approval-user-name" class="text-xs text-slate-300 font-medium truncate"></p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="denyUserEntry()" class="py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-semibold rounded-xl border border-slate-700 transition">Recusar</button>
+        <button onclick="approveUserEntry()" class="py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-md shadow-blue-600/30">Permitir</button>
       </div>
     </div>
 
@@ -332,11 +380,13 @@
     let currentRoomCode = null;
     let activeConnections = {};
     let remoteProfiles = {};
+    let pendingGuestConn = null;
 
     let isMicMuted = false;
     let isDeafened = false;
     let isCamOff = false;
     let isSharingScreen = false;
+    let isHost = false;
 
     const peerConfig = {
       config: {
@@ -347,7 +397,6 @@
       }
     };
 
-    // Sintetizador Áudio Avançado & Animado (Volume Alto)
     function playAudioTone(type) {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -369,34 +418,26 @@
         };
 
         if (type === 'unmute') {
-          // Som alegre subindo (2 notas curtas)
           createTone(480, 0, 0.08, 'sine', 0.35);
           createTone(720, 0.07, 0.1, 'sine', 0.35);
         } else if (type === 'mute') {
-          // Som fechando descendo
           createTone(650, 0, 0.08, 'sine', 0.35);
           createTone(380, 0.07, 0.1, 'sine', 0.35);
         } else if (type === 'deafen') {
-          // Som grave e pesado estilo travamento
           createTone(500, 0, 0.09, 'sawtooth', 0.25);
           createTone(250, 0.08, 0.15, 'sawtooth', 0.3);
         } else if (type === 'undeafen') {
-          // Som desbloqueando vibrante
           createTone(250, 0, 0.09, 'triangle', 0.3);
           createTone(600, 0.08, 0.15, 'triangle', 0.35);
         } else if (type === 'screen_start') {
-          // Som futurista subindo rápido (3 notas)
           createTone(350, 0, 0.06, 'sine', 0.3);
           createTone(550, 0.05, 0.06, 'sine', 0.35);
           createTone(850, 0.1, 0.12, 'sine', 0.4);
         } else if (type === 'screen_stop') {
-          // Som encerrando transmissão
           createTone(800, 0, 0.06, 'sine', 0.35);
           createTone(450, 0.06, 0.12, 'sine', 0.3);
         }
-      } catch(e) {
-        console.warn('Erro áudio:', e);
-      }
+      } catch(e) {}
     }
 
     window.handleAuthSuccess = function(userData) {
@@ -536,11 +577,6 @@
 
       updateLocalTileUI();
       initPeerMesh();
-
-      document.getElementById('step-room').classList.add('hidden');
-      document.getElementById('step-call').classList.remove('hidden');
-      document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
-      updateConnectionStatus('connecting', 'Conectando...');
     }
 
     function updateLocalTileUI() {
@@ -569,7 +605,16 @@
 
         hostPeer.on('open', (hId) => {
           currentUser.peerId = hId;
-          updateConnectionStatus('connected', 'Aguardando convidados...');
+          isHost = true;
+          
+          document.getElementById('step-room').classList.add('hidden');
+          document.getElementById('step-call').classList.remove('hidden');
+          document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
+          updateConnectionStatus('connected', 'Você é o anfitrião');
+
+          // Exibe o card flutuante estilo Google Meet para o Anfitrião
+          showMeetInviteCard();
+
           setupPeerEvents(hostPeer);
           peer.destroy();
           peer = hostPeer;
@@ -577,17 +622,79 @@
 
         hostPeer.on('error', (err) => {
           if (err.type === 'unavailable-id') {
+            isHost = false;
             const guestPeer = new Peer(myUniqueId, peerConfig);
             guestPeer.on('open', (gId) => {
               currentUser.peerId = gId;
-              updateConnectionStatus('connected', 'Entrando...');
+              
+              document.getElementById('step-room').classList.add('hidden');
+              document.getElementById('step-waiting').classList.remove('hidden');
+
               setupPeerEvents(guestPeer);
-              connectToPeerAndSync(preciseHostId, guestPeer);
+              requestEntryToHost(preciseHostId, guestPeer);
             });
             peer.destroy();
             peer = guestPeer;
           }
         });
+      });
+    }
+
+    function showMeetInviteCard() {
+      const card = document.getElementById('meet-invite-card');
+      const urlLabel = document.getElementById('meet-invite-url');
+      const emailLabel = document.getElementById('meet-user-email-label');
+
+      const fullLink = `${window.location.origin}${window.location.pathname}?sala=${encodeURIComponent(currentRoomCode)}`;
+      urlLabel.textContent = fullLink;
+      emailLabel.textContent = currentUser.email || currentUser.name || 'usuário';
+
+      card.classList.remove('hidden');
+    }
+
+    function closeMeetInviteCard() {
+      document.getElementById('meet-invite-card').classList.add('hidden');
+    }
+
+    function copyMeetInviteUrl() {
+      const urlText = document.getElementById('meet-invite-url').textContent;
+      navigator.clipboard.writeText(urlText).then(() => {
+        alert('Link da reunião copiado com sucesso!');
+      });
+    }
+
+    function requestEntryToHost(targetHostId, pInstance) {
+      const conn = pInstance.connect(targetHostId);
+      activeConnections[targetHostId] = conn;
+
+      conn.on('open', () => {
+        conn.send({ 
+          type: 'request-entry', 
+          peerId: currentUser.peerId, 
+          name: currentUser.name, 
+          avatar: currentUser.avatar, 
+          isMuted: isMicMuted, 
+          isDeafened: isDeafened 
+        });
+      });
+
+      conn.on('data', (data) => {
+        if (data.type === 'entry-response') {
+          if (data.approved) {
+            document.getElementById('step-waiting').classList.add('hidden');
+            document.getElementById('step-call').classList.remove('hidden');
+            document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
+            updateConnectionStatus('connected', 'Conectado!');
+
+            const call = pInstance.call(targetHostId, localStream);
+            if (call) handleIncomingStream(call);
+          } else {
+            alert('Sua solicitação de entrada foi recusada pelo anfitrião.');
+            cancelJoinRequest();
+          }
+        } else {
+          handleDataMessage(data, targetHostId, pInstance);
+        }
       });
     }
 
@@ -602,50 +709,55 @@
       });
     }
 
-    function connectToPeerAndSync(targetId, pInstance) {
-      const conn = pInstance.connect(targetId);
-      activeConnections[targetId] = conn;
-
-      conn.on('open', () => {
-        conn.send({ type: 'join', peerId: currentUser.peerId, name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted, isDeafened: isDeafened });
-      });
-
-      conn.on('data', (data) => {
-        handleDataMessage(data, targetId, pInstance);
-      });
-
-      const call = pInstance.call(targetId, localStream);
-      if (call) handleIncomingStream(call);
-    }
-
     function setupDataReceiver(conn) {
       const peerId = conn.peer;
-      activeConnections[peerId] = conn;
 
       conn.on('data', (data) => {
-        handleDataMessage(data, peerId, peer);
+        if (data.type === 'request-entry' && isHost) {
+          pendingGuestConn = conn;
+          pendingGuestConn.guestData = data;
+          document.getElementById('approval-user-name').textContent = data.name + ' (' + (data.peerId) + ')';
+          document.getElementById('approval-modal').classList.remove('hidden');
+        } else {
+          handleDataMessage(data, peerId, peer);
+        }
       });
+    }
+
+    function approveUserEntry() {
+      if (pendingGuestConn) {
+        const data = pendingGuestConn.guestData;
+        activeConnections[data.peerId] = pendingGuestConn;
+        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted, isDeafened: data.isDeafened };
+
+        pendingGuestConn.send({ type: 'entry-response', approved: true });
+
+        const call = peer.call(data.peerId, localStream);
+        if (call) handleIncomingStream(call);
+
+        document.getElementById('approval-modal').classList.add('hidden');
+        pendingGuestConn = null;
+      }
+    }
+
+    function denyUserEntry() {
+      if (pendingGuestConn) {
+        pendingGuestConn.send({ type: 'entry-response', approved: false });
+        document.getElementById('approval-modal').classList.add('hidden');
+        pendingGuestConn = null;
+      }
+    }
+
+    function cancelJoinRequest() {
+      if (peer) peer.destroy();
+      document.getElementById('step-waiting').classList.add('hidden');
+      document.getElementById('step-room').classList.remove('hidden');
     }
 
     function handleDataMessage(data, peerId, pInstance) {
       if (data.type === 'join') {
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
         updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
-        
-        if (!activeConnections[data.peerId]) {
-          const call = pInstance.call(data.peerId, localStream);
-          if (call) handleIncomingStream(call);
-
-          const conn = pInstance.connect(data.peerId);
-          activeConnections[data.peerId] = conn;
-          conn.on('open', () => {
-            conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted, isDeafened: isDeafened });
-          });
-          conn.on('data', (d) => handleDataMessage(d, data.peerId, pInstance));
-        }
-      } else if (data.type === 'profile') {
-        remoteProfiles[peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
-        updateRemoteTileMetadata(peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
       } else if (data.type === 'mute-status') {
         if (!remoteProfiles[peerId]) remoteProfiles[peerId] = {};
         remoteProfiles[peerId].isMuted = data.isMuted;
@@ -873,18 +985,13 @@
       document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
     }
 
-    function copyInviteLink() {
-      const inviteUrl = `${window.location.origin}${window.location.pathname}?sala=${encodeURIComponent(currentRoomCode)}`;
-      navigator.clipboard.writeText(inviteUrl).then(() => {
-        alert('Link do anfitrião copiado!\n\nEnvie este link para os participantes entrarem direto nesta sala:\n' + inviteUrl);
-      });
-    }
-
     function leaveCall() {
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (peer) peer.destroy();
 
       document.getElementById('step-call').classList.add('hidden');
+      document.getElementById('meet-invite-card').classList.add('hidden');
+      document.getElementById('approval-modal').classList.add('hidden');
       document.getElementById('step-room').classList.remove('hidden');
       
       const grid = document.getElementById('video-grid');
