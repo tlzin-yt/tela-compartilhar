@@ -477,7 +477,7 @@
       <button id="btn-toggle-deafen" onclick="toggleDeafen()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Full Mutar (Fone e Mic)">
         <i class="fa-solid fa-headphones"></i>
       </button>
-      <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Câmera Privada (Só eu vejo)">
+      <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Câmara Privada (Só eu vejo)">
         <i class="fa-solid fa-video"></i>
       </button>
       <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center transition text-2xl shadow-lg shrink-0" title="Compartilhar Tela">
@@ -878,7 +878,6 @@
           audio: { echoCancellation: true, noiseSuppression: true } 
         });
         
-        // Cria um stream separado estritamente para preview local (para você ver-se sempre)
         localPreviewStream = new MediaStream(localStream.getTracks());
         document.getElementById('local-video').srcObject = localPreviewStream;
         document.getElementById('local-avatar-placeholder').classList.add('hidden');
@@ -1309,12 +1308,21 @@
 
       call.on('stream', (remoteStream) => {
         bindStreamToVideo(call.peer, remoteStream);
+        
+        // Assegura que se o stream receber pistas de vídeo depois, elas sejam aplicadas
+        remoteStream.onaddtrack = () => {
+          bindStreamToVideo(call.peer, remoteStream);
+        };
       });
 
       if (call.peerConnection) {
         call.peerConnection.ontrack = (event) => {
           const remoteStream = event.streams[0] || new MediaStream([event.track]);
           bindStreamToVideo(call.peer, remoteStream);
+
+          remoteStream.onaddtrack = () => {
+            bindStreamToVideo(call.peer, remoteStream);
+          };
         };
       }
 
@@ -1420,13 +1428,16 @@
     function bindStreamToVideo(peerId, remoteStream) {
       const video = document.getElementById(`remote-video-el-${peerId}`);
       if (video) {
-        video.srcObject = remoteStream;
+        if (video.srcObject !== remoteStream) {
+          video.srcObject = remoteStream;
+        }
         video.play().catch(e => console.log("Autoplay restrito pelo navegador:", e));
       }
       
       const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
       if (avatarDiv) {
-        const hasVideo = remoteStream.getVideoTracks().length > 0 && remoteStream.getVideoTracks()[0].enabled;
+        const videoTracks = remoteStream.getVideoTracks();
+        const hasVideo = videoTracks.length > 0 && videoTracks.some(track => track.enabled && track.readyState === 'live');
         avatarDiv.classList.toggle('hidden', hasVideo);
       }
 
@@ -1603,7 +1614,6 @@
       }
     }
 
-    // Agora o botão de câmara desliga a transmissão para os outros, mas você continua a ver-se a si próprio!
     function toggleCam() {
       if (!localStream) return;
       const videoTrack = localStream.getVideoTracks()[0];
