@@ -24,7 +24,7 @@
       signInWithEmailAndPassword, 
       signOut, 
       onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAaaXQzO3XgcpToTSjIoCc5AjsrtJDPxyU",
@@ -870,13 +870,16 @@
         document.getElementById('local-video').srcObject = localStream;
         document.getElementById('local-avatar-placeholder').classList.add('hidden');
         isCamOff = false;
+        showToast('Microfone e Câmera ativados com sucesso!', 'success');
       } catch (err) {
-        console.warn('Câmera/Microfone com falha:', err);
+        console.warn('Câmera falhou, tentando apenas áudio:', err);
         try {
-          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          showToast('Câmera indisponível, ativando apenas áudio.', 'success');
+          localStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { echoCancellation: true, noiseSuppression: true } 
+          });
+          showToast('Câmera indisponível. Entrando apenas com microfone.', 'success');
         } catch(e) {
-          showToast('Erro crítico: Permissão de microfone negada no navegador!', 'error');
+          showToast('Erro crítico: Acesso ao microfone negado ou indisponível no navegador!', 'error');
           localStream = new MediaStream();
         }
         document.getElementById('local-avatar-placeholder').classList.remove('hidden');
@@ -994,6 +997,7 @@
 
       const conn = peer.connect(targetHostPeerId, { reliable: true });
       activeConnections[targetHostPeerId] = conn;
+      setupConnectionEvents(conn, targetHostPeerId);
 
       conn.on('open', () => {
         conn.send({ 
@@ -1014,7 +1018,6 @@
             document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
             updateConnectionStatus('connected', 'Conectado!');
 
-            // Envia dados de sincronização e chama o host
             conn.send({ 
               type: 'direct-sync', 
               peerId: currentUser.peerId, 
@@ -1036,17 +1039,13 @@
           handleDataMessage(data, targetHostPeerId, peer);
         }
       });
-
-      conn.on('error', (err) => {
-        showToast('Erro ao conectar com o anfitrião.', 'error');
-        cancelJoinRequest();
-      });
     }
 
     function connectToPeerDirectly(peerId) {
       if (activeConnections[peerId]) return;
       const conn = peer.connect(peerId);
       activeConnections[peerId] = conn;
+      setupConnectionEvents(conn, peerId);
 
       conn.on('open', () => {
         conn.send({ 
@@ -1063,6 +1062,15 @@
 
       const call = peer.call(peerId, localStream);
       if (call) handleIncomingStream(call);
+    }
+
+    function setupConnectionEvents(conn, peerId) {
+      conn.on('close', () => {
+        removeRemoteVideo(peerId);
+      });
+      conn.on('error', () => {
+        removeRemoteVideo(peerId);
+      });
     }
 
     function toggleGuestsMenu() {
@@ -1122,11 +1130,11 @@
 
         conn.send({ type: 'entry-response', approved: true });
 
-        // Salva os dados de perfil imediatamente e cria o tile na tela
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
         ensureRemoteTileExists(data.peerId);
 
         activeConnections[data.peerId] = conn;
+        setupConnectionEvents(conn, data.peerId);
 
         Object.keys(activeConnections).forEach(existingPeerId => {
           if (existingPeerId !== data.peerId && activeConnections[existingPeerId].open) {
@@ -1134,6 +1142,9 @@
             conn.send({ type: 'connect-to-peer', peerId: existingPeerId });
           }
         });
+
+        const call = peer.call(data.peerId, localStream);
+        if (call) handleIncomingStream(call);
 
         pendingGuestsList.splice(index, 1);
         updateGuestsUI();
@@ -1162,6 +1173,7 @@
 
     function setupDataReceiver(conn) {
       const peerId = conn.peer;
+      setupConnectionEvents(conn, peerId);
 
       conn.on('data', (data) => {
         if (data.type === 'request-entry' && isHost) {
@@ -1171,7 +1183,6 @@
           ensureRemoteTileExists(data.peerId);
           updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
           
-          // Responde com o sync do anfitrião para fechar o ciclo bidirecional
           if (isHost) {
             conn.send({ 
               type: 'direct-sync', 
@@ -1237,6 +1248,9 @@
       });
 
       call.on('close', () => {
+        removeRemoteVideo(call.peer);
+      });
+      call.on('error', () => {
         removeRemoteVideo(call.peer);
       });
     }
@@ -1312,6 +1326,15 @@
         container.remove();
         updateParticipantCount();
       }
+      if (mediaCalls[peerId]) {
+        try { mediaCalls[peerId].close(); } catch(e){}
+        delete mediaCalls[peerId];
+      }
+      if (activeConnections[peerId]) {
+        try { activeConnections[peerId].close(); } catch(e){}
+        delete activeConnections[peerId];
+      }
+      delete remoteProfiles[peerId];
     }
 
     function updateConnectionStatus(status, text) {
