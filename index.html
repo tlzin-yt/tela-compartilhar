@@ -114,8 +114,9 @@
         document.getElementById('step-auth').classList.remove('hidden');
         document.getElementById('step-profile').classList.add('hidden');
         document.getElementById('step-room').classList.add('hidden');
-        document.getElementById('step-call').classList.add('hidden');
+        document.getElementById('step-prejoin').classList.add('hidden');
         document.getElementById('step-waiting').classList.add('hidden');
+        document.getElementById('step-call').classList.add('hidden');
       }
     });
   </script>
@@ -260,7 +261,25 @@
     </div>
   </div>
 
-  <!-- TELA DE ESPERA / APROVAÇÃO (ESTILO GOOGLE MEET) -->
+  <!-- TELA DE PRÉ-ENTRADA "Pronto para participar?" (SISTEMA DE LINK/GUEST) -->
+  <div id="step-prejoin" class="hidden w-full max-w-md px-4 z-30">
+    <div class="bg-white text-slate-900 border border-slate-200 p-8 rounded-3xl shadow-2xl space-y-6 text-center">
+      <h2 class="text-3xl font-normal text-slate-900 tracking-tight">Pronto para participar?</h2>
+      
+      <div class="space-y-3 pt-2">
+        <button onclick="sendJoinRequest()" class="btn-press w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full text-base transition shadow-md shadow-blue-600/20">
+          Pedir para participar
+        </button>
+        
+        <button onclick="location.href=location.pathname" class="w-full py-3 text-slate-600 hover:text-slate-900 text-sm font-medium transition flex items-center justify-center space-x-1.5">
+          <span>Outras formas de participar</span>
+          <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE ESPERA / AGUARDANDO ADM -->
   <div id="step-waiting" class="hidden w-full max-w-md px-4 z-30">
     <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl space-y-6 text-center">
       <div class="w-16 h-16 bg-blue-600/20 text-blue-400 rounded-full flex items-center justify-center text-3xl mx-auto border border-blue-500/30 animate-pulse">
@@ -305,15 +324,15 @@
       </div>
     </div>
 
-    <!-- CARD FLUTUANTE ESTILO GOOGLE MEET: "Sua reunião está pronta" -->
+    <!-- CARD FLUTUANTE INFERIOR ESQUERDO: "Sua call está pronta" -->
     <div id="meet-invite-card" class="hidden absolute bottom-24 left-6 w-80 bg-white text-slate-800 rounded-2xl shadow-2xl p-5 border border-slate-200 z-40 transition-all duration-300">
       <div class="flex items-center justify-between mb-3">
-        <h4 class="font-bold text-slate-900 text-sm">Sua reunião está pronta</h4>
+        <h4 class="font-bold text-slate-900 text-sm">Sua call está pronta</h4>
         <button onclick="closeMeetInviteCard()" class="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg transition">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <p class="text-xs text-slate-500 mb-3">Ou compartilhe este link da reunião com quem você quer que participe</p>
+      <p class="text-xs text-slate-500 mb-3">Ou compartilhe este link da call com quem você quer que participe</p>
       <div class="flex items-center justify-between bg-slate-100 rounded-xl px-3 py-2.5 mb-4 border border-slate-200">
         <span id="meet-invite-url" class="text-xs text-slate-700 font-medium truncate mr-2 select-all"></span>
         <button onclick="copyMeetInviteUrl()" class="text-slate-600 hover:text-blue-600 text-sm transition p-1" title="Copiar link">
@@ -324,23 +343,23 @@
         <div class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
-        <p class="text-[11px] text-blue-900 leading-tight">As pessoas que usarem este link da reunião precisarão receber sua permissão para participar.</p>
+        <p class="text-[11px] text-blue-900 leading-tight">As pessoas que usarem este link da call precisarão receber sua permissão para participar.</p>
       </div>
       <p class="text-[11px] text-slate-400 truncate">Participando como <span id="meet-user-email-label" class="font-semibold text-slate-600"></span></p>
     </div>
 
-    <!-- NOTIFICAÇÃO DE SOLICITAÇÃO DE ENTRADA DO ANFITRIÃO -->
-    <div id="approval-modal" class="hidden absolute top-20 right-6 w-96 bg-slate-900 border border-slate-700 text-white rounded-2xl shadow-2xl p-4 z-50 animate-bounce-short">
+    <!-- NOTIFICAÇÃO NO CANTO SUPERIOR DIREITO DA CALL (SOLICITAÇÃO PARA ADM/ANFITRIÃO) -->
+    <div id="approval-modal" class="hidden absolute top-16 right-6 w-80 bg-slate-900/95 border border-slate-700 text-white rounded-2xl shadow-2xl p-4 z-50 transition-all duration-300">
       <div class="flex items-center space-x-3 mb-3">
-        <div class="w-10 h-10 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center text-lg shrink-0">
+        <div class="w-9 h-9 rounded-full bg-blue-600/30 text-blue-400 flex items-center justify-center text-base shrink-0">
           <i class="fa-solid fa-user-plus"></i>
         </div>
-        <div>
-          <h4 class="font-bold text-sm text-white">Alguém quer participar</h4>
-          <p id="approval-user-name" class="text-xs text-slate-300 font-medium truncate"></p>
+        <div class="overflow-hidden">
+          <h4 class="font-bold text-xs text-white">Alguém quer participar</h4>
+          <p id="approval-user-name" class="text-xs text-slate-300 font-semibold truncate"></p>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-2">
+      <div class="grid grid-cols-2 gap-2 pt-1">
         <button onclick="denyUserEntry()" class="py-2 bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-semibold rounded-xl border border-slate-700 transition">Recusar</button>
         <button onclick="approveUserEntry()" class="py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition shadow-md shadow-blue-600/30">Permitir</button>
       </div>
@@ -381,6 +400,7 @@
     let activeConnections = {};
     let remoteProfiles = {};
     let pendingGuestConn = null;
+    let targetHostPeerId = null;
 
     let isMicMuted = false;
     let isDeafened = false;
@@ -612,7 +632,6 @@
           document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
           updateConnectionStatus('connected', 'Você é o anfitrião');
 
-          // Exibe o card flutuante estilo Google Meet para o Anfitrião
           showMeetInviteCard();
 
           setupPeerEvents(hostPeer);
@@ -623,15 +642,16 @@
         hostPeer.on('error', (err) => {
           if (err.type === 'unavailable-id') {
             isHost = false;
+            targetHostPeerId = preciseHostId;
             const guestPeer = new Peer(myUniqueId, peerConfig);
             guestPeer.on('open', (gId) => {
               currentUser.peerId = gId;
               
               document.getElementById('step-room').classList.add('hidden');
-              document.getElementById('step-waiting').classList.remove('hidden');
+              // Exibe a tela "Pronto para participar?" igual à imagem enviada
+              document.getElementById('step-prejoin').classList.remove('hidden');
 
               setupPeerEvents(guestPeer);
-              requestEntryToHost(preciseHostId, guestPeer);
             });
             peer.destroy();
             peer = guestPeer;
@@ -659,13 +679,16 @@
     function copyMeetInviteUrl() {
       const urlText = document.getElementById('meet-invite-url').textContent;
       navigator.clipboard.writeText(urlText).then(() => {
-        alert('Link da reunião copiado com sucesso!');
+        alert('Link da call copiado com sucesso!');
       });
     }
 
-    function requestEntryToHost(targetHostId, pInstance) {
-      const conn = pInstance.connect(targetHostId);
-      activeConnections[targetHostId] = conn;
+    function sendJoinRequest() {
+      document.getElementById('step-prejoin').classList.add('hidden');
+      document.getElementById('step-waiting').classList.remove('hidden');
+
+      const conn = peer.connect(targetHostPeerId);
+      activeConnections[targetHostPeerId] = conn;
 
       conn.on('open', () => {
         conn.send({ 
@@ -686,14 +709,14 @@
             document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
             updateConnectionStatus('connected', 'Conectado!');
 
-            const call = pInstance.call(targetHostId, localStream);
+            const call = peer.call(targetHostPeerId, localStream);
             if (call) handleIncomingStream(call);
           } else {
             alert('Sua solicitação de entrada foi recusada pelo anfitrião.');
             cancelJoinRequest();
           }
         } else {
-          handleDataMessage(data, targetHostId, pInstance);
+          handleDataMessage(data, targetHostPeerId, peer);
         }
       });
     }
@@ -716,7 +739,7 @@
         if (data.type === 'request-entry' && isHost) {
           pendingGuestConn = conn;
           pendingGuestConn.guestData = data;
-          document.getElementById('approval-user-name').textContent = data.name + ' (' + (data.peerId) + ')';
+          document.getElementById('approval-user-name').textContent = data.name;
           document.getElementById('approval-modal').classList.remove('hidden');
         } else {
           handleDataMessage(data, peerId, peer);
@@ -751,6 +774,7 @@
     function cancelJoinRequest() {
       if (peer) peer.destroy();
       document.getElementById('step-waiting').classList.add('hidden');
+      document.getElementById('step-prejoin').classList.add('hidden');
       document.getElementById('step-room').classList.remove('hidden');
     }
 
@@ -992,6 +1016,8 @@
       document.getElementById('step-call').classList.add('hidden');
       document.getElementById('meet-invite-card').classList.add('hidden');
       document.getElementById('approval-modal').classList.add('hidden');
+      document.getElementById('step-prejoin').classList.add('hidden');
+      document.getElementById('step-waiting').classList.add('hidden');
       document.getElementById('step-room').classList.remove('hidden');
       
       const grid = document.getElementById('video-grid');
