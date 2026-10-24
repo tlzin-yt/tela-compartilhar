@@ -134,16 +134,16 @@
       transform: scale(0.90) !important;
     }
 
-    /* ESTILOS DA AURA VERDE ESTILO DISCORD AO FALAR */
+    /* AURA AZUL NEON AO FALAR */
     .speaking-aura {
-      border-color: #22c55e !important;
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.65), inset 0 0 15px rgba(34, 197, 94, 0.35) !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.8), inset 0 0 15px rgba(59, 130, 246, 0.4) !important;
       transition: box-shadow 0.15s ease, border-color 0.15s ease;
     }
 
     .speaking-avatar-ring {
-      border-color: #22c55e !important;
-      box-shadow: 0 0 16px rgba(34, 197, 94, 0.85) !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.9) !important;
       transition: box-shadow 0.15s ease, border-color 0.15s ease;
     }
   </style>
@@ -299,7 +299,7 @@
         <i class="fa-solid fa-user-clock"></i>
       </div>
       <div>
-        <h2 class="text-1xl font-bold text-white tracking-tight mb-2">Pedi permissão para entrar...</h2>
+        <h2 class="text-xl font-bold text-white tracking-tight mb-2">Pedi permissão para entrar...</h2>
         <p class="text-xs text-slate-400">Aguarde o anfitrião permitir sua entrada na chamada.</p>
       </div>
       <button onclick="cancelJoinRequest()" class="btn-press w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl text-xs transition border border-slate-700">
@@ -421,8 +421,6 @@
     let isHost = false;
 
     let audioCtx = null;
-    let localAnalyser = null;
-    let localAudioSource = null;
 
     const peerConfig = {
       config: {
@@ -433,24 +431,30 @@
       }
     };
 
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtx();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
     function playAudioTone(type) {
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = audioCtx || new AudioCtx();
-        if (ctx.state === 'suspended') ctx.resume();
-
+        ensureAudioContext();
         const createTone = (freq, startTime, duration, typeOsc = 'triangle', gainVal = 0.3) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
           osc.type = typeOsc;
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-          gain.gain.setValueAtTime(gainVal, ctx.currentTime + startTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+          gain.gain.setValueAtTime(gainVal, audioCtx.currentTime + startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + startTime + duration);
           osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + startTime);
-          osc.stop(ctx.currentTime + startTime + duration);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + startTime);
+          osc.stop(audioCtx.currentTime + startTime + duration);
         };
 
         if (type === 'unmute') {
@@ -476,34 +480,30 @@
       } catch(e) {}
     }
 
-    // DETECTOR DE VOZ (VAD) EM TEMPO REAL
+    // DETECTOR DE VOZ (VAD) CORRIGIDO
     function setupLocalAudioDetection() {
       if (!localStream || localStream.getAudioTracks().length === 0) return;
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        ensureAudioContext();
 
-        localAudioSource = audioCtx.createMediaStreamSource(localStream);
-        localAnalyser = audioCtx.createAnalyser();
-        localAnalyser.fftSize = 256;
-        localAudioSource.connect(localAnalyser);
+        const source = audioCtx.createMediaStreamSource(localStream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
 
-        const bufferLength = localAnalyser.frequencyBinCount;
+        const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
 
         const checkVolume = () => {
-          if (!localAnalyser) return;
           if (isMicMuted || isDeafened) {
             setSpeakingState('local', false);
           } else {
-            localAnalyser.getByteFrequencyData(dataArray);
+            analyser.getByteFrequencyData(dataArray);
             let sum = 0;
             for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
             let average = sum / bufferLength;
 
-            const isSpeaking = average > 18; // Sensibilidade de fala
-            setSpeakingState('local', isSpeaking);
+            setSpeakingState('local', average > 12);
           }
           requestAnimationFrame(checkVolume);
         };
@@ -515,9 +515,7 @@
     function setupRemoteAudioDetection(peerId, stream) {
       if (!stream || stream.getAudioTracks().length === 0) return;
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        ensureAudioContext();
 
         const source = audioCtx.createMediaStreamSource(stream);
         const analyser = audioCtx.createAnalyser();
@@ -538,8 +536,7 @@
             for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
             let average = sum / bufferLength;
 
-            const isSpeaking = average > 18;
-            setSpeakingState(peerId, isSpeaking);
+            setSpeakingState(peerId, average > 12);
           }
           requestAnimationFrame(checkVolume);
         };
@@ -690,6 +687,7 @@
     }
 
     async function startOrJoinCall() {
+      ensureAudioContext();
       const roomCode = document.getElementById('room-code-input').value.trim();
       if (!roomCode) { alert('Informe o código da sala ou clique em "Gerar Código".'); return; }
 
@@ -705,7 +703,11 @@
         isCamOff = false;
       } catch (err) {
         console.warn('Câmera indisponível:', err);
-        localStream = new MediaStream();
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch(e) {
+          localStream = new MediaStream();
+        }
         document.getElementById('local-avatar-placeholder').classList.remove('hidden');
         isCamOff = true;
         document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
@@ -801,6 +803,7 @@
     }
 
     function sendJoinRequest() {
+      ensureAudioContext();
       document.getElementById('step-prejoin').classList.add('hidden');
       document.getElementById('step-waiting').classList.remove('hidden');
 
@@ -832,10 +835,35 @@
             alert('Sua solicitação de entrada foi recusada pelo anfitrião.');
             cancelJoinRequest();
           }
+        } else if (data.type === 'connect-to-peer') {
+          // CONECTAR AOS OUTROS PARTICIPANTES DA SALA
+          connectToPeerDirectly(data.peerId);
         } else {
           handleDataMessage(data, targetHostPeerId, peer);
         }
       });
+    }
+
+    function connectToPeerDirectly(peerId) {
+      if (activeConnections[peerId]) return;
+      const conn = peer.connect(peerId);
+      activeConnections[peerId] = conn;
+
+      conn.on('open', () => {
+        conn.send({ 
+          type: 'direct-sync', 
+          peerId: currentUser.peerId, 
+          name: currentUser.name, 
+          avatar: currentUser.avatar, 
+          isMuted: isMicMuted, 
+          isDeafened: isDeafened 
+        });
+      });
+
+      conn.on('data', (data) => handleDataMessage(data, peerId, peer));
+
+      const call = peer.call(peerId, localStream);
+      if (call) handleIncomingStream(call);
     }
 
     function toggleGuestsMenu() {
@@ -891,6 +919,15 @@
       const item = pendingGuestsList[index];
       if (item) {
         const { conn, data } = item;
+
+        // Avisa a todos os já presentes para conectarem ao novo participante
+        Object.keys(activeConnections).forEach(existingPeerId => {
+          if (existingPeerId !== data.peerId && activeConnections[existingPeerId].open) {
+            activeConnections[existingPeerId].send({ type: 'connect-to-peer', peerId: data.peerId });
+            conn.send({ type: 'connect-to-peer', peerId: existingPeerId });
+          }
+        });
+
         activeConnections[data.peerId] = conn;
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted, isDeafened: data.isDeafened };
 
@@ -930,6 +967,9 @@
       conn.on('data', (data) => {
         if (data.type === 'request-entry' && isHost) {
           addGuestRequestUI(conn, data);
+        } else if (data.type === 'direct-sync') {
+          remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted, isDeafened: data.isDeafened };
+          updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
         } else {
           handleDataMessage(data, peerId, peer);
         }
@@ -944,7 +984,7 @@
     }
 
     function handleDataMessage(data, peerId, pInstance) {
-      if (data.type === 'join') {
+      if (data.type === 'join' || data.type === 'direct-sync') {
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
         updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
       } else if (data.type === 'mute-status') {
