@@ -347,47 +347,56 @@
       }
     };
 
-    // Sintetizador de áudio estilo Discord
+    // Sintetizador Áudio Avançado & Animado (Volume Alto)
     function playAudioTone(type) {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
         const audioCtx = new AudioCtx();
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
 
-        if (type === 'mute') {
-          osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.08);
-        } else if (type === 'unmute') {
-          osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+        const createTone = (freq, startTime, duration, typeOsc = 'triangle', gainVal = 0.3) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = typeOsc;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+          gain.gain.setValueAtTime(gainVal, audioCtx.currentTime + startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + startTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + startTime);
+          osc.stop(audioCtx.currentTime + startTime + duration);
+        };
+
+        if (type === 'unmute') {
+          // Som alegre subindo (2 notas curtas)
+          createTone(480, 0, 0.08, 'sine', 0.35);
+          createTone(720, 0.07, 0.1, 'sine', 0.35);
+        } else if (type === 'mute') {
+          // Som fechando descendo
+          createTone(650, 0, 0.08, 'sine', 0.35);
+          createTone(380, 0.07, 0.1, 'sine', 0.35);
         } else if (type === 'deafen') {
-          osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.12);
+          // Som grave e pesado estilo travamento
+          createTone(500, 0, 0.09, 'sawtooth', 0.25);
+          createTone(250, 0.08, 0.15, 'sawtooth', 0.3);
         } else if (type === 'undeafen') {
-          osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(520, audioCtx.currentTime + 0.12);
+          // Som desbloqueando vibrante
+          createTone(250, 0, 0.09, 'triangle', 0.3);
+          createTone(600, 0.08, 0.15, 'triangle', 0.35);
         } else if (type === 'screen_start') {
-          osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+          // Som futurista subindo rápido (3 notas)
+          createTone(350, 0, 0.06, 'sine', 0.3);
+          createTone(550, 0.05, 0.06, 'sine', 0.35);
+          createTone(850, 0.1, 0.12, 'sine', 0.4);
         } else if (type === 'screen_stop') {
-          osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+          // Som encerrando transmissão
+          createTone(800, 0, 0.06, 'sine', 0.35);
+          createTone(450, 0.06, 0.12, 'sine', 0.3);
         }
-
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
-      } catch(e) {}
+      } catch(e) {
+        console.warn('Erro áudio:', e);
+      }
     }
 
     window.handleAuthSuccess = function(userData) {
@@ -677,7 +686,7 @@
       video.autoplay = true;
       video.playsinline = true;
       video.srcObject = stream;
-      video.muted = isDeafened; // Se estiver em Full Mute, desativa o som dos outros
+      video.muted = isDeafened;
       video.className = 'w-full h-full object-cover';
 
       const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false, isDeafened: false };
@@ -779,7 +788,6 @@
       
       playAudioTone(isDeafened ? 'deafen' : 'undeafen');
 
-      // Se der Full Mute, muta o microfone automaticamente
       if (isDeafened) {
         isMicMuted = true;
       }
@@ -791,7 +799,6 @@
         }
       }
 
-      // Muta/Desmuta todos os vídeos remotos recebidos
       document.querySelectorAll('#video-grid video').forEach(v => {
         if (v.id !== 'local-video') {
           v.muted = isDeafened;
@@ -846,7 +853,7 @@
       if (!isSharingScreen) {
         try {
           screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-          playAudioTone('screen_start'); // Som ao iniciar compartilhamento
+          playAudioTone('screen_start');
           const screenTrack = screenStream.getVideoTracks()[0];
           document.getElementById('local-video').srcObject = screenStream;
           isSharingScreen = true;
@@ -860,7 +867,7 @@
 
     function stopScreenShare() {
       if (screenStream) screenStream.getTracks().forEach(t => t.stop());
-      playAudioTone('screen_stop'); // Som ao parar compartilhamento
+      playAudioTone('screen_stop');
       document.getElementById('local-video').srcObject = localStream;
       isSharingScreen = false;
       document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
