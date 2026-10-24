@@ -514,10 +514,14 @@
 
     let audioCtx = null;
 
+    // Configuração robusta com múltiplos servidores STUN públicos
     const peerConfig = {
       config: {
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun.stunprotocol.org:3478' },
           { urls: 'stun:global.stun.twilio.com:3478' }
         ]
       }
@@ -1235,6 +1239,7 @@
         const video = document.getElementById(`remote-video-el-${call.peer}`);
         if (video) {
           video.srcObject = remoteStream;
+          video.play().catch(e => console.log("Autoplay restrito pelo navegador:", e));
         }
         
         const avatarDiv = document.getElementById(`remote-avatar-${call.peer}`);
