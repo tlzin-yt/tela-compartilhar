@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OmniCall - Chamadas & Compartilhamento</title>
+  <title>OmniCall - Chamadas & Workspace</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -24,7 +24,6 @@
       onAuthStateChanged 
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-    // Suas credenciais reais do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAaaXQzO3XgcpToTSjIoCc5AjsrtJDPxyU",
       authDomain: "omnicall-b2c87.firebaseapp.com",
@@ -35,12 +34,10 @@
       measurementId: "G-7GM9CNWP48"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
 
-    // Funções globais de autenticação
     window.auth = auth;
     window.signInWithGoogle = async () => {
       try {
@@ -80,7 +77,7 @@
           avatar: ''
         });
       } catch (error) {
-        alert("Erro ao registar: " + error.message);
+        alert("Erro ao registrar: " + error.message);
       }
     };
 
@@ -90,7 +87,6 @@
       window.location.reload();
     };
 
-    // Detetar sessão de utilizador existente
     onAuthStateChanged(auth, (user) => {
       if (user) {
         window.handleLoginSuccess({
@@ -106,145 +102,138 @@
   </script>
 
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
-    
-    .glass-panel {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans h-screen overflow-hidden flex flex-col md:flex-row select-none">
+<body class="bg-slate-50 text-slate-800 font-sans h-screen overflow-hidden flex flex-col md:flex-row select-none">
 
   <!-- MOBILE HEADER -->
-  <div class="md:hidden flex items-center justify-between p-3 bg-slate-900 border-b border-slate-800 z-30">
+  <div class="md:hidden flex items-center justify-between p-3.5 bg-white border-b border-slate-200 z-30 shadow-sm">
     <div class="flex items-center space-x-2">
-      <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-        <i class="fa-solid fa-bolt"></i>
+      <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">
+        <i class="fa-solid fa-phone"></i>
       </div>
-      <span class="font-bold text-white tracking-wide">OmniCall</span>
+      <span class="font-bold text-slate-900 text-base tracking-tight">OmniCall</span>
     </div>
     <div class="flex items-center space-x-2">
-      <button onclick="toggleMobileSection('sidebar')" class="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800">
-        <i class="fa-solid fa-users"></i>
+      <button onclick="toggleMobileSection('sidebar')" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-lg active:bg-slate-200">
+        <i class="fa-solid fa-bars mr-1"></i> Menu
       </button>
-      <button onclick="toggleMobileSection('call')" class="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800">
-        <i class="fa-solid fa-video"></i>
+      <button onclick="openModal('modal-add-friend')" class="px-3 py-1.5 text-xs font-semibold text-white bg-emerald-500 rounded-lg active:bg-emerald-600 shadow-sm">
+        <i class="fa-solid fa-user-plus mr-1"></i> Amigo
       </button>
     </div>
   </div>
 
-  <!-- BARRA LATERAL DE NAVEGAÇÃO -->
-  <aside id="mobile-sidebar" class="hidden md:flex w-full md:w-80 bg-slate-900/90 border-r border-slate-800/80 flex-col h-full z-20 absolute md:relative inset-0">
-    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+  <!-- BARRA LATERAL (MENU CLEAN LIGHT) -->
+  <aside id="mobile-sidebar" class="hidden md:flex w-full md:w-80 bg-white border-r border-slate-200 flex-col h-full z-20 absolute md:relative inset-0 shadow-sm">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg font-bold border border-emerald-500/30">
-          <i class="fa-solid fa-bolt"></i>
+        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-500/20">
+          <i class="fa-solid fa-phone"></i>
         </div>
         <div>
-          <h1 class="font-bold text-white leading-tight">OmniCall</h1>
-          <p class="text-xs text-slate-400">Chamadas & Tela P2P</p>
+          <h1 class="font-bold text-slate-900 text-base leading-tight">OmniCall</h1>
+          <p class="text-xs text-slate-400">Chamadas Simples & Diretas</p>
         </div>
       </div>
-      <button onclick="openModal('modal-add-friend')" class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition" title="Adicionar Amigo">
+      <button onclick="openModal('modal-add-friend')" class="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Adicionar Amigo">
         <i class="fa-solid fa-user-plus"></i>
       </button>
     </div>
 
     <div class="flex-1 overflow-y-auto p-3 space-y-6">
+      <!-- Início / Criar Sala -->
       <div>
-        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 px-2">Salas Rápidas</div>
-        <button onclick="showQuickCallSection()" class="w-full flex items-center space-x-3 p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition">
-          <i class="fa-solid fa-bolt text-lg"></i>
-          <span class="font-medium text-sm">Criar / Entrar em Sala</span>
+        <button onclick="showQuickCallSection()" class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition shadow-sm">
+          <i class="fa-solid fa-plus"></i>
+          <span>Criar ou Entrar em Sala</span>
         </button>
       </div>
 
       <!-- Grupos -->
       <div>
-        <div class="flex items-center justify-between mb-2 px-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Grupos & Calls Abertas</span>
-          <button onclick="openModal('modal-create-group')" class="text-xs text-slate-400 hover:text-emerald-400" title="Criar Grupo"><i class="fa-solid fa-plus"></i></button>
+        <div class="flex items-center justify-between mb-2 px-1">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Grupos de Call</span>
+          <button onclick="openModal('modal-create-group')" class="text-xs font-semibold text-emerald-600 hover:underline"><i class="fa-solid fa-plus mr-1"></i>Novo</button>
         </div>
         <div id="groups-list" class="space-y-1">
-          <p id="no-groups-msg" class="text-xs text-slate-500 italic px-2">Nenhum grupo ainda.</p>
+          <p id="no-groups-msg" class="text-xs text-slate-400 italic px-1">Nenhum grupo ainda.</p>
         </div>
       </div>
 
-      <!-- Amigos -->
+      <!-- Lista de Amigos -->
       <div>
-        <div class="flex items-center justify-between mb-2 px-2">
-          <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Amigos</span>
-          <span id="friends-count" class="text-xs text-slate-500">0</span>
+        <div class="flex items-center justify-between mb-2 px-1">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Seus Amigos</span>
+          <span id="friends-count" class="text-xs font-bold text-slate-400">0</span>
         </div>
         <div id="friends-list" class="space-y-1">
-          <p id="no-friends-msg" class="text-xs text-slate-500 italic px-2">Sua lista está vazia.</p>
+          <p id="no-friends-msg" class="text-xs text-slate-400 italic px-1">Sua lista está vazia.</p>
         </div>
       </div>
     </div>
 
-    <div class="p-3 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between">
+    <!-- Perfil no Rodapé -->
+    <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
       <div class="flex items-center space-x-3 overflow-hidden cursor-pointer" onclick="openProfileModal()">
         <div class="relative flex-shrink-0">
-          <img id="my-sidebar-avatar" src="" class="w-10 h-10 rounded-full object-cover bg-slate-800 border border-slate-700 hidden">
-          <div id="my-sidebar-avatar-fallback" class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-slate-300">?</div>
-          <span class="w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full absolute bottom-0 right-0"></span>
+          <img id="my-sidebar-avatar" src="" class="w-9 h-9 rounded-full object-cover bg-slate-200 border border-slate-300 hidden">
+          <div id="my-sidebar-avatar-fallback" class="w-9 h-9 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center font-bold text-slate-600 text-sm">?</div>
+          <span class="w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full absolute bottom-0 right-0"></span>
         </div>
         <div class="truncate">
-          <div id="my-sidebar-name" class="font-medium text-sm text-white truncate">Definir Nome</div>
-          <div id="my-sidebar-bio" class="text-xs text-slate-400 truncate">Clique para editar perfil</div>
+          <div id="my-sidebar-name" class="font-bold text-xs text-slate-800 truncate">Seu Nome</div>
+          <div id="my-sidebar-bio" class="text-[11px] text-slate-400 truncate">Clique para editar</div>
         </div>
       </div>
-      <button onclick="window.logoutUser()" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition" title="Sair da Conta">
+      <button onclick="window.logoutUser()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Sair da Conta">
         <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
   </aside>
 
   <!-- ÁREA PRINCIPAL -->
-  <main class="flex-1 flex flex-col h-full bg-slate-950 relative overflow-hidden">
+  <main class="flex-1 flex flex-col h-full bg-slate-100 relative overflow-hidden">
     
     <!-- TELA DE LOGIN / CADASTRO -->
     <div id="auth-screen" class="flex-1 flex items-center justify-center p-4 overflow-y-auto">
-      <div class="max-w-md w-full glass-panel p-6 md:p-8 rounded-2xl shadow-2xl space-y-6 my-auto">
+      <div class="max-w-sm w-full bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-xl space-y-6 my-auto">
         <div class="text-center space-y-2">
-          <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30">
-            <i class="fa-solid fa-bolt"></i>
+          <div class="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl mx-auto shadow-md shadow-emerald-500/20">
+            <i class="fa-solid fa-phone"></i>
           </div>
-          <h2 class="text-2xl font-bold text-white">Bem-vindo ao OmniCall</h2>
-          <p class="text-xs md:text-sm text-slate-400">Faça login para salvar seus contatos, grupos e perfil.</p>
+          <h2 class="text-xl font-bold text-slate-900">Entrar no OmniCall</h2>
+          <p class="text-xs text-slate-500">Acesse com sua conta para gerenciar chamadas e contatos.</p>
         </div>
 
-        <!-- Botão Google -->
-        <button onclick="window.signInWithGoogle()" class="w-full py-3 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-sm transition flex items-center justify-center space-x-3 shadow-md">
+        <button onclick="window.signInWithGoogle()" class="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-sm transition border border-slate-300 flex items-center justify-center space-x-3 shadow-sm active:bg-slate-100">
           <i class="fa-brands fa-google text-lg text-rose-500"></i>
           <span>Entrar com a Conta Google</span>
         </button>
 
-        <div class="flex items-center my-4">
-          <div class="flex-1 border-t border-slate-800"></div>
-          <span class="px-3 text-xs text-slate-500 font-semibold uppercase">ou e-mail</span>
-          <div class="flex-1 border-t border-slate-800"></div>
+        <div class="flex items-center my-3">
+          <div class="flex-1 border-t border-slate-200"></div>
+          <span class="px-3 text-[11px] text-slate-400 font-bold uppercase">ou e-mail</span>
+          <div class="flex-1 border-t border-slate-200"></div>
         </div>
 
-        <!-- Form E-mail -->
-        <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <form onsubmit="handleAuthSubmit(event)" class="space-y-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">E-mail</label>
-            <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-emerald-500">
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">E-mail</label>
+            <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Senha</label>
-            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-emerald-500">
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Senha</label>
+            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500">
           </div>
 
-          <div class="grid grid-cols-2 gap-3 pt-2">
-            <button type="button" onclick="handleRegister()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition">Criar Conta</button>
-            <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">Entrar</button>
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <button type="button" onclick="handleRegister()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">Criar Conta</button>
+            <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition shadow-sm">Entrar</button>
           </div>
         </form>
       </div>
@@ -252,40 +241,32 @@
 
     <!-- TELA DE SETUP DA SALA -->
     <div id="setup-screen" class="hidden flex-1 flex items-center justify-center p-4 overflow-y-auto">
-      <div class="max-w-md w-full glass-panel p-6 md:p-8 rounded-2xl shadow-2xl space-y-6 my-auto">
+      <div class="max-w-md w-full bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-xl space-y-6 my-auto">
         <div class="text-center space-y-2">
-          <div class="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30">
-            <i class="fa-solid fa-bolt"></i>
+          <div class="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl mx-auto shadow-md shadow-emerald-500/20">
+            <i class="fa-solid fa-video"></i>
           </div>
-          <h2 class="text-2xl font-bold text-white">Iniciar Call Sem Limites</h2>
-          <p class="text-xs md:text-sm text-slate-400">Conexão direta P2P. Compartilhe sua tela, converse com áudio/vídeo.</p>
+          <h2 class="text-xl font-bold text-slate-900">Iniciar Chamada</h2>
+          <p class="text-xs text-slate-500">Digite um código ou crie uma nova sala para conversar.</p>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Seu Nome de Exibição</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user"></i></span>
-              <input type="text" id="input-username" placeholder="Digite seu nome ou apelido..." class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-            </div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Seu Nome</label>
+            <input type="text" id="input-username" placeholder="Digite seu nome..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:border-emerald-500">
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Código da Sala</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-hashtag"></i></span>
-              <input type="text" id="input-room-code" placeholder="Ex: reuniao-amigos-123" class="w-full bg-slate-900 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-            </div>
+            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Código da Sala</label>
+            <input type="text" id="input-room-code" placeholder="Ex: sala-amigos-123" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800 focus:outline-none focus:border-emerald-500">
           </div>
 
           <div class="grid grid-cols-2 gap-3 pt-2">
-            <button onclick="generateRandomRoom()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-sm transition flex items-center justify-center space-x-2">
-              <i class="fa-solid fa-dice"></i>
-              <span>Gerar Sala</span>
+            <button onclick="generateRandomRoom()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
+              <i class="fa-solid fa-dice mr-1"></i> Gerar Código
             </button>
-            <button onclick="startOrJoinCall()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20">
-              <i class="fa-solid fa-right-to-bracket"></i>
-              <span>Entrar na Call</span>
+            <button onclick="startOrJoinCall()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition shadow-md shadow-emerald-500/20">
+              <i class="fa-solid fa-right-to-bracket mr-1"></i> Entrar na Call
             </button>
           </div>
         </div>
@@ -294,68 +275,63 @@
 
     <!-- PAINEL DA CHAMADA ATIVA -->
     <div id="call-screen" class="hidden flex-1 flex flex-col md:flex-row h-full overflow-hidden">
-      <div class="flex-1 bg-slate-950 p-2 md:p-4 flex flex-col h-full overflow-hidden">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-2">
+      <div class="flex-1 bg-slate-900 p-2 md:p-4 flex flex-col h-full overflow-hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-2">
           <div class="flex items-center space-x-3">
             <span id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
             <div>
-              <h3 id="current-room-title" class="font-bold text-white text-sm md:text-base">Sala: -</h3>
-              <p class="text-xs text-slate-400"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> participante(s)</p>
+              <h3 id="current-room-title" class="font-bold text-white text-sm">Sala: -</h3>
+              <p class="text-xs text-slate-400"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> pessoa(s)</p>
             </div>
           </div>
-          <button onclick="copyInviteLink()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center space-x-2 transition">
-            <i class="fa-solid fa-link"></i>
-            <span class="hidden sm:inline">Copiar Link de Convite</span>
+          <button onclick="copyInviteLink()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition">
+            <i class="fa-solid fa-link mr-1"></i> Copiar Link
           </button>
         </div>
 
-        <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto p-1 items-center justify-center">
-          <!-- Vídeo Local -->
-          <div id="local-video-container" class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden aspect-video flex items-center justify-center group shadow-lg">
+        <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto p-1 items-center justify-center">
+          <div id="local-video-container" class="relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden aspect-video flex items-center justify-center shadow-lg">
             <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
             <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden">
               <img id="local-placeholder-img" src="" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700 hidden">
               <div id="local-placeholder-fallback" class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">?</div>
             </div>
-            <div class="absolute bottom-3 left-3 bg-slate-950/80 px-3 py-1 rounded-lg border border-slate-800 text-xs font-medium text-white flex items-center space-x-2">
-              <i class="fa-solid fa-user text-emerald-400"></i>
-              <span id="local-label-name">Você</span>
+            <div class="absolute bottom-3 left-3 bg-slate-900/80 px-2.5 py-1 rounded-md text-xs font-medium text-white">
+              Você
             </div>
           </div>
         </div>
 
-        <!-- Controles -->
-        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-center space-x-3 md:space-x-4">
-          <button id="btn-toggle-mic" onclick="toggleMic()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-lg transition shadow-md">
+        <!-- Controles de Áudio/Vídeo -->
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-center space-x-3">
+          <button id="btn-toggle-mic" onclick="toggleMic()" class="w-11 h-11 rounded-full bg-slate-800 text-white flex items-center justify-center transition hover:bg-slate-700">
             <i class="fa-solid fa-microphone"></i>
           </button>
-          <button id="btn-toggle-cam" onclick="toggleCam()" class="w-12 h-12 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center text-lg transition shadow-md">
+          <button id="btn-toggle-cam" onclick="toggleCam()" class="w-11 h-11 rounded-full bg-slate-800 text-white flex items-center justify-center transition hover:bg-slate-700">
             <i class="fa-solid fa-video"></i>
           </button>
-          <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-12 h-12 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-lg transition shadow-md" title="Tela">
+          <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-11 h-11 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition hover:bg-emerald-500/30" title="Compartilhar Tela">
             <i class="fa-solid fa-desktop"></i>
           </button>
-          <button onclick="leaveCall()" class="w-12 h-12 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center text-lg transition shadow-md" title="Sair">
+          <button onclick="leaveCall()" class="w-11 h-11 rounded-full bg-rose-600 text-white flex items-center justify-center transition hover:bg-rose-700" title="Sair">
             <i class="fa-solid fa-phone-slash"></i>
           </button>
         </div>
       </div>
 
-      <!-- Chat -->
-      <div id="call-chat-panel" class="w-full md:w-80 bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 flex flex-col h-64 md:h-full">
-        <div class="p-3 border-b border-slate-800 flex items-center justify-between">
-          <span class="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center space-x-2">
-            <i class="fa-solid fa-comments text-emerald-400"></i>
-            <span>Chat ao Vivo</span>
-          </span>
+      <!-- Chat na Call -->
+      <div id="call-chat-panel" class="w-full md:w-80 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-60 md:h-full">
+        <div class="p-3 border-b border-slate-200 font-bold text-xs uppercase text-slate-500 flex items-center space-x-2">
+          <i class="fa-solid fa-comments text-emerald-500"></i>
+          <span>Chat da Sala</span>
         </div>
-        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3">
-          <div class="text-center text-xs text-slate-500 italic">Início da conversa da sala.</div>
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50">
+          <div class="text-center text-xs text-slate-400 italic">Início da conversa.</div>
         </div>
-        <div class="p-3 border-t border-slate-800 bg-slate-950/50">
+        <div class="p-2.5 border-t border-slate-200 bg-white">
           <form onsubmit="sendChatMessage(event)" class="flex items-center space-x-2">
-            <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-            <button type="submit" class="p-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs transition">
+            <input type="text" id="chat-input" placeholder="Enviar mensagem..." class="flex-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
+            <button type="submit" class="p-2 bg-emerald-500 text-white font-bold rounded-lg text-xs hover:bg-emerald-600 transition">
               <i class="fa-solid fa-paper-plane"></i>
             </button>
           </form>
@@ -364,113 +340,63 @@
     </div>
   </main>
 
-  <!-- MOBILE NAV -->
-  <div class="md:hidden flex bg-slate-900 border-t border-slate-800 justify-around p-2 z-30">
-    <button onclick="toggleMobileSection('sidebar')" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 text-xs">
-      <i class="fa-solid fa-users text-lg"></i>
-      <span>Menu</span>
-    </button>
-    <button onclick="toggleMobileSection('setup')" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 text-xs">
-      <i class="fa-solid fa-bolt text-lg"></i>
-      <span>Início</span>
-    </button>
-    <button onclick="toggleMobileSection('call')" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 text-xs">
-      <i class="fa-solid fa-video text-lg"></i>
-      <span>Call</span>
-    </button>
-  </div>
-
   <!-- MODAIS -->
-  <!-- MODAL: PERFIL -->
-  <div id="modal-profile" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-white text-lg">Editar Meu Perfil</h3>
-        <button onclick="closeModal('modal-profile')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+  <!-- Modal Perfil -->
+  <div id="modal-profile" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-bold text-slate-800 text-base">Editar Perfil</h3>
+        <button onclick="closeModal('modal-profile')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="space-y-4">
-        <div class="flex flex-col items-center space-y-3">
-          <div class="relative">
-            <img id="profile-modal-preview" src="" class="w-20 h-20 rounded-full object-cover bg-slate-800 border-2 border-emerald-500/50 hidden">
-            <div id="profile-modal-preview-fallback" class="w-20 h-20 rounded-full bg-slate-800 border-2 border-emerald-500/50 flex items-center justify-center text-2xl font-bold text-white">?</div>
-          </div>
-          <label class="cursor-pointer px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 rounded-lg border border-slate-700 transition">
-            <i class="fa-solid fa-upload mr-1"></i> Galeria
-            <input type="file" id="profile-file-input" accept="image/*" class="hidden" onchange="handleProfileImageUpload(event)">
-          </label>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome</label>
+          <input type="text" id="profile-name-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome de Usuário</label>
-          <input type="text" id="profile-name-input" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">URL da Foto (Opcional)</label>
-          <input type="text" id="profile-avatar-input" onchange="updateProfileAvatarPreview()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Biografia</label>
-          <textarea id="profile-bio-input" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL da Foto</label>
+          <input type="text" id="profile-avatar-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
         </div>
       </div>
-      <div class="flex justify-end space-x-3 pt-2">
-        <button onclick="closeModal('modal-profile')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="saveProfile()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Salvar</button>
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="closeModal('modal-profile')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="saveProfile()" class="px-4 py-1.5 bg-emerald-500 text-white font-bold rounded-xl text-xs">Salvar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: ADICIONAR AMIGO -->
-  <div id="modal-add-friend" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-white text-base">Adicionar Amigo</h3>
-        <button onclick="closeModal('modal-add-friend')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+  <!-- Modal Adicionar Amigo (Otimizado para Celular) -->
+  <div id="modal-add-friend" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-bold text-slate-800 text-base">Adicionar Amigo</h3>
+        <button onclick="closeModal('modal-add-friend')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">ID ou Nome do Amigo</label>
-        <input type="text" id="friend-id-input" placeholder="Nome do amigo..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome ou ID do Amigo</label>
+        <input type="text" id="friend-id-input" placeholder="Digite o nome..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
       </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('modal-add-friend')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="addFriend()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Adicionar</button>
+      <div class="flex justify-end space-x-2 pt-1">
+        <button onclick="closeModal('modal-add-friend')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="addFriend()" class="px-4 py-1.5 bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm">Adicionar</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: CRIAR GRUPO -->
-  <div id="modal-create-group" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-white text-base">Criar Grupo</h3>
-        <button onclick="closeModal('modal-create-group')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+  <!-- Modal Criar Grupo -->
+  <div id="modal-create-group" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-bold text-slate-800 text-base">Criar Grupo</h3>
+        <button onclick="closeModal('modal-create-group')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome do Grupo</label>
-        <input type="text" id="group-name-input" placeholder="Ex: Galera do Game" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome do Grupo</label>
+        <input type="text" id="group-name-input" placeholder="Ex: Amigos do Game" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none">
       </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('modal-create-group')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="createGroup()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Criar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: ADICIONAR MEMBRO AO GRUPO -->
-  <div id="modal-add-member" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="font-bold text-white text-base">Adicionar Amigo ao Grupo</h3>
-        <button onclick="closeModal('modal-add-member')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <input type="hidden" id="selected-group-id">
-      <div>
-        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Selecione o Amigo</label>
-        <select id="group-friend-select" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
-        </select>
-      </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeModal('modal-add-member')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="confirmAddMemberToGroup()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs">Adicionar</button>
+      <div class="flex justify-end space-x-2 pt-1">
+        <button onclick="closeModal('modal-create-group')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Cancelar</button>
+        <button onclick="createGroup()" class="px-4 py-1.5 bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm">Criar</button>
       </div>
     </div>
   </div>
@@ -509,7 +435,7 @@
       }
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('setup-screen').classList.remove('hidden');
-      updateUserUI();
+      loadUserData();
     };
 
     function handleAuthSubmit(e) {
@@ -522,16 +448,15 @@
     function handleRegister() {
       const email = document.getElementById('auth-email').value;
       const pass = document.getElementById('auth-password').value;
-      if (!email || !pass) { alert("Preencha o e-mail e a senha."); return; }
+      if (!email || !pass) { alert("Preencha e-mail e senha."); return; }
       window.registerWithEmail(email, pass);
     }
 
     function loadUserData() {
-      const savedUser = localStorage.getItem('omnicall_user');
-      if (savedUser) currentUser = JSON.parse(savedUser);
-      const savedFriends = localStorage.getItem('omnicall_friends');
+      const userKey = currentUser.email ? `_` + currentUser.email : '';
+      const savedFriends = localStorage.getItem('omnicall_friends' + userKey);
       if (savedFriends) friendsList = JSON.parse(savedFriends);
-      const savedGroups = localStorage.getItem('omnicall_groups');
+      const savedGroups = localStorage.getItem('omnicall_groups' + userKey);
       if (savedGroups) groupsList = JSON.parse(savedGroups);
 
       updateUserUI();
@@ -540,9 +465,10 @@
     }
 
     function saveUserData() {
+      const userKey = currentUser.email ? `_` + currentUser.email : '';
       localStorage.setItem('omnicall_user', JSON.stringify(currentUser));
-      localStorage.setItem('omnicall_friends', JSON.stringify(friendsList));
-      localStorage.setItem('omnicall_groups', JSON.stringify(groupsList));
+      localStorage.setItem('omnicall_friends' + userKey, JSON.stringify(friendsList));
+      localStorage.setItem('omnicall_groups' + userKey, JSON.stringify(groupsList));
       updateUserUI();
     }
 
@@ -550,12 +476,10 @@
       const nameInput = document.getElementById('input-username');
       if (nameInput) nameInput.value = currentUser.name || '';
       const sidebarName = document.getElementById('my-sidebar-name');
-      const sidebarBio = document.getElementById('my-sidebar-bio');
       const sidebarAvatar = document.getElementById('my-sidebar-avatar');
       const sidebarFallback = document.getElementById('my-sidebar-avatar-fallback');
 
       if (sidebarName) sidebarName.textContent = currentUser.name || 'Definir Nome';
-      if (sidebarBio) sidebarBio.textContent = currentUser.bio || 'Clique para editar perfil';
 
       if (currentUser.avatar) {
         if (sidebarAvatar) { sidebarAvatar.src = currentUser.avatar; sidebarAvatar.classList.remove('hidden'); }
@@ -567,24 +491,6 @@
           sidebarFallback.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
         }
       }
-
-      const localFallbackImg = document.getElementById('local-placeholder-img');
-      const localFallbackChar = document.getElementById('local-placeholder-fallback');
-      if (currentUser.avatar) {
-        localFallbackImg.src = currentUser.avatar;
-        localFallbackImg.classList.remove('hidden');
-        localFallbackChar.classList.add('hidden');
-      } else {
-        localFallbackImg.classList.add('hidden');
-        localFallbackChar.classList.remove('hidden');
-        localFallbackChar.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
-      }
-    }
-
-    function checkUrlParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const roomParam = urlParams.get('sala');
-      if (roomParam) document.getElementById('input-room-code').value = roomParam;
     }
 
     function generateRandomRoom() {
@@ -598,42 +504,12 @@
     function openProfileModal() {
       document.getElementById('profile-name-input').value = currentUser.name || '';
       document.getElementById('profile-avatar-input').value = currentUser.avatar || '';
-      document.getElementById('profile-bio-input').value = currentUser.bio || '';
-      updateProfileAvatarPreview();
       openModal('modal-profile');
-    }
-
-    function updateProfileAvatarPreview() {
-      const url = document.getElementById('profile-avatar-input').value;
-      const previewImg = document.getElementById('profile-modal-preview');
-      const previewFallback = document.getElementById('profile-modal-preview-fallback');
-      if (url) {
-        previewImg.src = url; previewImg.classList.remove('hidden');
-        previewFallback.classList.add('hidden');
-      } else {
-        previewImg.classList.add('hidden');
-        previewFallback.classList.remove('hidden');
-        const name = document.getElementById('profile-name-input').value;
-        previewFallback.textContent = name ? name.charAt(0).toUpperCase() : '?';
-      }
-    }
-
-    function handleProfileImageUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('profile-avatar-input').value = e.target.result;
-          updateProfileAvatarPreview();
-        };
-        reader.readAsDataURL(file);
-      }
     }
 
     function saveProfile() {
       currentUser.name = document.getElementById('profile-name-input').value.trim() || 'Usuário';
       currentUser.avatar = document.getElementById('profile-avatar-input').value.trim();
-      currentUser.bio = document.getElementById('profile-bio-input').value.trim();
       saveUserData();
       closeModal('modal-profile');
     }
@@ -659,21 +535,21 @@
       const listEl = document.getElementById('friends-list');
       document.getElementById('friends-count').textContent = friendsList.length;
       if (friendsList.length === 0) {
-        listEl.innerHTML = '<p class="text-xs text-slate-500 italic px-2">Sua lista está vazia.</p>';
+        listEl.innerHTML = '<p class="text-xs text-slate-400 italic px-1">Sua lista está vazia.</p>';
         return;
       }
       listEl.innerHTML = '';
       friendsList.forEach(friend => {
         const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-2 rounded-xl hover:bg-slate-800/60 transition';
+        item.className = 'flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition';
         item.innerHTML = `
           <div class="flex items-center space-x-2 cursor-pointer flex-1" onclick="startCallWithCode('${friend}')">
-            <div class="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-slate-300">${friend.charAt(0).toUpperCase()}</div>
-            <span class="text-xs font-medium text-slate-200 truncate">${friend}</span>
+            <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-600">${friend.charAt(0).toUpperCase()}</div>
+            <span class="text-xs font-medium text-slate-800 truncate">${friend}</span>
           </div>
           <div class="flex items-center space-x-1">
-            <button onclick="startCallWithCode('${friend}')" class="p-1.5 text-slate-400 hover:text-emerald-400" title="Chamar"><i class="fa-solid fa-phone text-xs"></i></button>
-            <button onclick="removeFriend('${friend}')" class="p-1.5 text-slate-400 hover:text-rose-400" title="Excluir Amigo"><i class="fa-solid fa-trash text-xs"></i></button>
+            <button onclick="startCallWithCode('${friend}')" class="p-1 text-emerald-600 hover:text-emerald-700" title="Chamar"><i class="fa-solid fa-phone text-xs"></i></button>
+            <button onclick="removeFriend('${friend}')" class="p-1 text-slate-400 hover:text-rose-600" title="Excluir"><i class="fa-solid fa-trash text-xs"></i></button>
           </div>
         `;
         listEl.appendChild(item);
@@ -684,7 +560,7 @@
       const groupName = document.getElementById('group-name-input').value.trim();
       if (groupName) {
         const groupId = 'grupo-' + Math.random().toString(36).substring(2, 8);
-        groupsList.push({ id: groupId, name: groupName, members: [] });
+        groupsList.push({ id: groupId, name: groupName });
         saveUserData();
         renderGroupsList();
         document.getElementById('group-name-input').value = '';
@@ -698,60 +574,22 @@
       renderGroupsList();
     }
 
-    function openAddMemberModal(groupId) {
-      document.getElementById('selected-group-id').value = groupId;
-      const select = document.getElementById('group-friend-select');
-      select.innerHTML = '';
-      if (friendsList.length === 0) {
-        select.innerHTML = '<option value="">Adicione amigos primeiro</option>';
-      } else {
-        friendsList.forEach(f => {
-          select.innerHTML += `<option value="${f}">${f}</option>`;
-        });
-      }
-      openModal('modal-add-member');
-    }
-
-    function confirmAddMemberToGroup() {
-      const groupId = document.getElementById('selected-group-id').value;
-      const friendName = document.getElementById('group-friend-select').value;
-      if (!friendName) return;
-
-      const group = groupsList.find(g => g.id === groupId);
-      if (group) {
-        if (!group.members) group.members = [];
-        if (!group.members.includes(friendName)) {
-          group.members.push(friendName);
-          saveUserData();
-          renderGroupsList();
-        }
-      }
-      closeModal('modal-add-member');
-    }
-
     function renderGroupsList() {
       const listEl = document.getElementById('groups-list');
       if (groupsList.length === 0) {
-        listEl.innerHTML = '<p class="text-xs text-slate-500 italic px-2">Nenhum grupo criado.</p>';
+        listEl.innerHTML = '<p class="text-xs text-slate-400 italic px-1">Nenhum grupo ainda.</p>';
         return;
       }
       listEl.innerHTML = '';
       groupsList.forEach(group => {
-        const memberCount = group.members ? group.members.length : 0;
         const item = document.createElement('div');
-        item.className = 'flex flex-col p-2 rounded-xl hover:bg-slate-800/60 transition space-y-1';
+        item.className = 'flex items-center justify-between p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition';
         item.innerHTML = `
-          <div class="flex items-center justify-between cursor-pointer" onclick="startCallWithCode('${group.id}')">
-            <div class="flex items-center space-x-2 truncate">
-              <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0">#</div>
-              <span class="text-xs font-medium text-slate-200 truncate">${group.name}</span>
-            </div>
-            <div class="flex items-center space-x-1" onclick="event.stopPropagation()">
-              <button onclick="openAddMemberModal('${group.id}')" class="p-1.5 text-slate-400 hover:text-emerald-400" title="Adicionar Membro"><i class="fa-solid fa-user-plus text-xs"></i></button>
-              <button onclick="deleteGroup('${group.id}')" class="p-1.5 text-slate-400 hover:text-rose-400" title="Excluir Grupo"><i class="fa-solid fa-trash text-xs"></i></button>
-            </div>
+          <div class="flex items-center space-x-2 cursor-pointer flex-1" onclick="startCallWithCode('${group.id}')">
+            <div class="w-6 h-6 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs">#</div>
+            <span class="text-xs font-medium text-slate-800 truncate">${group.name}</span>
           </div>
-          ${memberCount > 0 ? `<div class="text-[10px] text-slate-500 pl-9">Membros: ${group.members.join(', ')}</div>` : ''}
+          <button onclick="deleteGroup('${group.id}')" class="p-1 text-slate-400 hover:text-rose-600" title="Excluir"><i class="fa-solid fa-trash text-xs"></i></button>
         `;
         listEl.appendChild(item);
       });
@@ -767,7 +605,7 @@
       const roomCodeInput = document.getElementById('input-room-code').value.trim();
 
       if (!usernameInput) { alert('Informe seu nome.'); return; }
-      if (!roomCodeInput) { alert('Informe o código da sala ou selecione um grupo.'); return; }
+      if (!roomCodeInput) { alert('Informe o código da sala.'); return; }
 
       currentUser.name = usernameInput;
       currentRoomCode = roomCodeInput;
@@ -780,7 +618,7 @@
         });
         document.getElementById('local-video').srcObject = localStream;
       } catch (err) {
-        console.warn('Câmera/Microfone indisponível:', err);
+        console.warn('Câmera indisponível:', err);
         localStream = new MediaStream();
       }
 
@@ -788,8 +626,8 @@
 
       document.getElementById('setup-screen').classList.add('hidden');
       document.getElementById('call-screen').classList.remove('hidden');
-      document.getElementById('current-room-title').textContent = 'Sala / Grupo: ' + currentRoomCode;
-      updateConnectionStatus('connecting', 'Conectando à sala...');
+      document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
+      updateConnectionStatus('connecting', 'Conectando...');
     }
 
     function initPeerMesh() {
@@ -803,7 +641,7 @@
 
         hostPeer.on('open', (hId) => {
           currentUser.peerId = hId;
-          updateConnectionStatus('connected', 'Sala ativa (Aguardando participantes)');
+          updateConnectionStatus('connected', 'Aguardando pessoas...');
           setupPeerEvents(hostPeer);
           peer.destroy();
           peer = hostPeer;
@@ -814,7 +652,7 @@
             const guestPeer = new Peer(myUniqueId, peerConfig);
             guestPeer.on('open', (gId) => {
               currentUser.peerId = gId;
-              updateConnectionStatus('connected', 'Conectado! Entrando na call...');
+              updateConnectionStatus('connected', 'Entrando...');
               setupPeerEvents(guestPeer);
               connectToPeerAndSync(preciseHostId, guestPeer);
             });
@@ -878,7 +716,6 @@
         }
       } else if (data.type === 'profile') {
         remoteProfiles[peerId] = { name: data.name, avatar: data.avatar };
-        updateRemoteTileMetadata(peerId, data.name, data.avatar);
       } else if (data.type === 'chat') {
         appendChatMessage(data.sender, data.message);
       }
@@ -887,7 +724,7 @@
     function handleIncomingStream(call) {
       call.on('stream', (remoteStream) => {
         addRemoteVideo(call.peer, remoteStream);
-        updateConnectionStatus('connected', 'Conectado com sucesso!');
+        updateConnectionStatus('connected', 'Conectado!');
       });
 
       call.on('close', () => {
@@ -901,7 +738,7 @@
       const grid = document.getElementById('video-grid');
       const container = document.createElement('div');
       container.id = `video-container-${peerId}`;
-      container.className = 'relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden aspect-video flex items-center justify-center shadow-lg';
+      container.className = 'relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden aspect-video flex items-center justify-center shadow-lg';
 
       const video = document.createElement('video');
       video.autoplay = true;
@@ -911,36 +748,15 @@
 
       const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '' };
 
-      const avatarDiv = document.createElement('div');
-      avatarDiv.id = `remote-avatar-${peerId}`;
-      avatarDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden';
-      avatarDiv.innerHTML = profile.avatar 
-        ? `<img src="${profile.avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700">`
-        : `<div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">${profile.name.charAt(0).toUpperCase()}</div>`;
-
       const label = document.createElement('div');
-      label.id = `remote-label-${peerId}`;
-      label.className = 'absolute bottom-3 left-3 bg-slate-950/80 px-3 py-1 rounded-lg border border-slate-800 text-xs font-medium text-white flex items-center space-x-2';
-      label.innerHTML = `<i class="fa-solid fa-user text-emerald-400"></i> <span id="remote-name-${peerId}">${profile.name}</span>`;
+      label.className = 'absolute bottom-3 left-3 bg-slate-900/80 px-2.5 py-1 rounded-md text-xs font-medium text-white';
+      label.textContent = profile.name;
 
       container.appendChild(video);
-      container.appendChild(avatarDiv);
       container.appendChild(label);
       grid.appendChild(container);
 
       updateParticipantCount();
-    }
-
-    function updateRemoteTileMetadata(peerId, name, avatar) {
-      const nameEl = document.getElementById(`remote-name-${peerId}`);
-      if (nameEl) nameEl.textContent = name;
-
-      const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
-      if (avatarDiv) {
-        avatarDiv.innerHTML = avatar 
-          ? `<img src="${avatar}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700">`
-          : `<div class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">${name.charAt(0).toUpperCase()}</div>`;
-      }
     }
 
     function removeRemoteVideo(peerId) {
@@ -1049,10 +865,10 @@
     function appendChatMessage(sender, message, isMe = false) {
       const chatContainer = document.getElementById('chat-messages');
       const msgDiv = document.createElement('div');
-      msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`;
+      msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5`;
       msgDiv.innerHTML = `
-        <span class="text-[10px] text-slate-500 px-1">${sender}</span>
-        <div class="max-w-[85%] px-3 py-2 rounded-2xl text-xs ${isMe ? 'bg-emerald-500 text-slate-950 font-medium rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none'}">${message}</div>
+        <span class="text-[10px] text-slate-400 px-1 font-semibold">${sender}</span>
+        <div class="max-w-[85%] px-3 py-1.5 rounded-xl text-xs ${isMe ? 'bg-emerald-500 text-white rounded-tr-none' : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'}">${message}</div>
       `;
       chatContainer.appendChild(msgDiv);
       chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -1061,20 +877,13 @@
     function toggleMobileSection(section) {
       const sidebar = document.getElementById('mobile-sidebar');
       if (section === 'sidebar') sidebar.classList.toggle('hidden');
-      else if (section === 'setup') {
-        sidebar.classList.add('hidden');
-        document.getElementById('setup-screen').classList.remove('hidden');
-        document.getElementById('call-screen').classList.add('hidden');
-      } else if (section === 'call') {
-        sidebar.classList.add('hidden');
-        document.getElementById('setup-screen').classList.add('hidden');
-        document.getElementById('call-screen').classList.remove('hidden');
-      }
     }
 
     function showQuickCallSection() {
       document.getElementById('setup-screen').classList.remove('hidden');
       document.getElementById('call-screen').classList.add('hidden');
+      const sidebar = document.getElementById('mobile-sidebar');
+      sidebar.classList.add('hidden');
     }
   </script>
 </body>
