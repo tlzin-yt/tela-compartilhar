@@ -49,7 +49,9 @@
           avatar: user.photoURL || ''
         });
       } catch (error) {
-        alert("Erro no login com Google: " + error.message);
+        if (error.code !== 'auth/cancelled-popup-request') {
+          alert("Erro no login com Google: " + error.message);
+        }
       }
     };
 
@@ -107,6 +109,8 @@
       } else {
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('mobile-sidebar').classList.add('hidden');
+        document.getElementById('mobile-header').classList.add('hidden');
       }
     });
   </script>
@@ -121,7 +125,7 @@
 <body class="bg-slate-50 text-slate-800 font-sans h-screen overflow-hidden flex flex-col md:flex-row select-none">
 
   <!-- MOBILE HEADER -->
-  <div class="md:hidden flex items-center justify-between p-3.5 bg-white border-b border-slate-200 z-30 shadow-sm">
+  <div id="mobile-header" class="hidden md:hidden items-center justify-between p-3.5 bg-white border-b border-slate-200 z-30 shadow-sm">
     <div class="flex items-center space-x-2">
       <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold">
         <i class="fa-solid fa-phone"></i>
@@ -139,7 +143,7 @@
   </div>
 
   <!-- BARRA LATERAL -->
-  <aside id="mobile-sidebar" class="hidden md:flex w-full md:w-80 bg-white border-r border-slate-200 flex-col h-full z-20 absolute md:relative inset-0 shadow-sm">
+  <aside id="mobile-sidebar" class="hidden w-full md:w-80 bg-white border-r border-slate-200 flex-col h-full z-20 absolute md:relative inset-0 shadow-sm">
     <div class="p-4 border-b border-slate-100 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-500/20">
@@ -350,7 +354,7 @@
   </main>
 
   <!-- MODAIS -->
-  <!-- Modal Perfil (Com Upload de Galeria Otimizado) -->
+  <!-- Modal Perfil -->
   <div id="modal-profile" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white border border-slate-200 w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -450,7 +454,9 @@
     window.handleLoginSuccess = function(userData, save = true) {
       currentUser.name = userData.name;
       currentUser.email = userData.email || '';
-      currentUser.avatar = userData.avatar || currentUser.avatar || '';
+      if (userData.avatar) {
+        currentUser.avatar = userData.avatar;
+      }
 
       if (save) {
         saveUserData();
@@ -458,6 +464,10 @@
 
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('setup-screen').classList.remove('hidden');
+      document.getElementById('mobile-sidebar').classList.remove('hidden');
+      document.getElementById('mobile-sidebar').classList.add('flex');
+      document.getElementById('mobile-header').classList.remove('hidden');
+      document.getElementById('mobile-header').classList.add('flex');
       loadUserData();
     };
 
