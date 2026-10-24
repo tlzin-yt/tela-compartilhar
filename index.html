@@ -291,7 +291,8 @@
           <div id="local-placeholder-fallback" class="w-28 h-28 rounded-full bg-slate-800 border-4 border-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-xl">?</div>
         </div>
         <div class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg">
-          <span id="local-mic-icon" class="text-rose-400 hidden"><i class="fa-solid fa-microphone-slash"></i></span>
+          <span id="local-deafen-icon" class="text-rose-400 hidden" title="Full Mutado"><i class="fa-solid fa-headphones-simple text-xs"></i></span>
+          <span id="local-mic-icon" class="text-rose-400 hidden" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
           <span id="local-label-name">Você</span>
         </div>
       </div>
@@ -299,15 +300,23 @@
 
     <!-- Barra de Controles da Call -->
     <div class="bg-slate-900 border-t border-slate-800 py-4 px-6 flex items-center justify-center space-x-4">
+      <!-- Microfone -->
       <button id="btn-toggle-mic" onclick="toggleMic()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md border border-slate-700" title="Microfone">
         <i class="fa-solid fa-microphone"></i>
       </button>
+      <!-- Full Mute (Fone) -->
+      <button id="btn-toggle-deafen" onclick="toggleDeafen()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md border border-slate-700" title="Full Mutar (Fone e Mic)">
+        <i class="fa-solid fa-headphones"></i>
+      </button>
+      <!-- Câmera -->
       <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md border border-slate-700" title="Câmera">
         <i class="fa-solid fa-video"></i>
       </button>
+      <!-- Compartilhar Tela -->
       <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="btn-press w-13 h-13 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 flex items-center justify-center transition text-lg shadow-md" title="Compartilhar Tela">
         <i class="fa-solid fa-desktop"></i>
       </button>
+      <!-- Sair -->
       <button onclick="leaveCall()" class="btn-press w-13 h-13 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-lg shadow-lg shadow-rose-600/30" title="Sair da Chamada">
         <i class="fa-solid fa-phone-slash"></i>
       </button>
@@ -325,6 +334,7 @@
     let remoteProfiles = {};
 
     let isMicMuted = false;
+    let isDeafened = false;
     let isCamOff = false;
     let isSharingScreen = false;
 
@@ -337,38 +347,47 @@
       }
     };
 
-    // Sintetizador de áudio estilo Discord robusto
-    function playMuteSound(muted) {
+    // Sintetizador de áudio estilo Discord
+    function playAudioTone(type) {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return;
         const audioCtx = new AudioCtx();
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        
         osc.type = 'sine';
-        if (muted) {
+
+        if (type === 'mute') {
           osc.frequency.setValueAtTime(440, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.08);
-        } else {
+        } else if (type === 'unmute') {
           osc.frequency.setValueAtTime(220, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+        } else if (type === 'deafen') {
+          osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.12);
+        } else if (type === 'undeafen') {
+          osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(520, audioCtx.currentTime + 0.12);
+        } else if (type === 'screen_start') {
+          osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+        } else if (type === 'screen_stop') {
+          osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
         }
 
         gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
 
         osc.connect(gain);
         gain.connect(audioCtx.destination);
 
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
-      } catch(e) {
-        console.warn('Erro ao tocar som:', e);
-      }
+        osc.stop(audioCtx.currentTime + 0.1);
+      } catch(e) {}
     }
 
     window.handleAuthSuccess = function(userData) {
@@ -579,7 +598,7 @@
       activeConnections[targetId] = conn;
 
       conn.on('open', () => {
-        conn.send({ type: 'join', peerId: currentUser.peerId, name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted });
+        conn.send({ type: 'join', peerId: currentUser.peerId, name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted, isDeafened: isDeafened });
       });
 
       conn.on('data', (data) => {
@@ -601,8 +620,8 @@
 
     function handleDataMessage(data, peerId, pInstance) {
       if (data.type === 'join') {
-        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false };
-        updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted);
+        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
+        updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
         
         if (!activeConnections[data.peerId]) {
           const call = pInstance.call(data.peerId, localStream);
@@ -611,24 +630,25 @@
           const conn = pInstance.connect(data.peerId);
           activeConnections[data.peerId] = conn;
           conn.on('open', () => {
-            conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted });
+            conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted, isDeafened: isDeafened });
           });
           conn.on('data', (d) => handleDataMessage(d, data.peerId, pInstance));
         }
       } else if (data.type === 'profile') {
-        remoteProfiles[peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false };
-        updateRemoteTileMetadata(peerId, data.name, data.avatar, data.isMuted);
+        remoteProfiles[peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
+        updateRemoteTileMetadata(peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
       } else if (data.type === 'mute-status') {
         if (!remoteProfiles[peerId]) remoteProfiles[peerId] = {};
         remoteProfiles[peerId].isMuted = data.isMuted;
-        updateRemoteTileMetadata(peerId, remoteProfiles[peerId].name, remoteProfiles[peerId].avatar, data.isMuted);
+        remoteProfiles[peerId].isDeafened = data.isDeafened;
+        updateRemoteTileMetadata(peerId, remoteProfiles[peerId].name, remoteProfiles[peerId].avatar, data.isMuted, data.isDeafened);
       }
     }
 
-    function broadcastMuteStatus() {
+    function broadcastStatus() {
       Object.values(activeConnections).forEach(conn => {
         if (conn && conn.open) {
-          conn.send({ type: 'mute-status', isMuted: isMicMuted });
+          conn.send({ type: 'mute-status', isMuted: isMicMuted, isDeafened: isDeafened });
         }
       });
     }
@@ -653,12 +673,14 @@
       container.className = 'relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl';
 
       const video = document.createElement('video');
+      video.id = `remote-video-el-${peerId}`;
       video.autoplay = true;
       video.playsinline = true;
       video.srcObject = stream;
+      video.muted = isDeafened; // Se estiver em Full Mute, desativa o som dos outros
       video.className = 'w-full h-full object-cover';
 
-      const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false };
+      const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false, isDeafened: false };
 
       const avatarDiv = document.createElement('div');
       avatarDiv.id = `remote-avatar-${peerId}`;
@@ -671,7 +693,8 @@
       const label = document.createElement('div');
       label.className = 'absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg';
       label.innerHTML = `
-        <span id="remote-mic-icon-${peerId}" class="text-rose-400 ${profile.isMuted ? '' : 'hidden'}"><i class="fa-solid fa-microphone-slash"></i></span>
+        <span id="remote-deafen-icon-${peerId}" class="text-rose-400 ${profile.isDeafened ? '' : 'hidden'}" title="Full Mutado"><i class="fa-solid fa-headphones-simple text-xs"></i></span>
+        <span id="remote-mic-icon-${peerId}" class="text-rose-400 ${profile.isMuted ? '' : 'hidden'}" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
         <span id="remote-name-${peerId}">${profile.name}</span>
       `;
 
@@ -683,7 +706,7 @@
       updateParticipantCount();
     }
 
-    function updateRemoteTileMetadata(peerId, name, avatar, isMuted) {
+    function updateRemoteTileMetadata(peerId, name, avatar, isMuted, isDeafened) {
       const nameEl = document.getElementById(`remote-name-${peerId}`);
       if (nameEl) nameEl.textContent = name;
 
@@ -691,6 +714,12 @@
       if (micIcon) {
         if (isMuted) micIcon.classList.remove('hidden');
         else micIcon.classList.add('hidden');
+      }
+
+      const deafenIcon = document.getElementById(`remote-deafen-icon-${peerId}`);
+      if (deafenIcon) {
+        if (isDeafened) deafenIcon.classList.remove('hidden');
+        else deafenIcon.classList.add('hidden');
       }
 
       const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
@@ -732,27 +761,72 @@
     function toggleMic() {
       isMicMuted = !isMicMuted;
       
-      playMuteSound(isMicMuted);
+      playAudioTone(isMicMuted ? 'mute' : 'unmute');
 
       if (localStream) {
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
-          audioTrack.enabled = !isMicMuted;
+          audioTrack.enabled = !isMicMuted && !isDeafened;
         }
       }
 
+      updateMicUI();
+      broadcastStatus();
+    }
+
+    function toggleDeafen() {
+      isDeafened = !isDeafened;
+      
+      playAudioTone(isDeafened ? 'deafen' : 'undeafen');
+
+      // Se der Full Mute, muta o microfone automaticamente
+      if (isDeafened) {
+        isMicMuted = true;
+      }
+
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = !isDeafened && !isMicMuted;
+        }
+      }
+
+      // Muta/Desmuta todos os vídeos remotos recebidos
+      document.querySelectorAll('#video-grid video').forEach(v => {
+        if (v.id !== 'local-video') {
+          v.muted = isDeafened;
+        }
+      });
+
+      updateMicUI();
+      updateDeafenUI();
+      broadcastStatus();
+    }
+
+    function updateMicUI() {
       const btn = document.getElementById('btn-toggle-mic');
       const localMicIcon = document.getElementById('local-mic-icon');
 
-      if (isMicMuted) {
+      if (isMicMuted || isDeafened) {
         btn.innerHTML = '<i class="fa-solid fa-microphone-slash text-rose-500"></i>';
         localMicIcon.classList.remove('hidden');
       } else {
         btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
         localMicIcon.classList.add('hidden');
       }
+    }
 
-      broadcastMuteStatus();
+    function updateDeafenUI() {
+      const btn = document.getElementById('btn-toggle-deafen');
+      const localDeafenIcon = document.getElementById('local-deafen-icon');
+
+      if (isDeafened) {
+        btn.innerHTML = '<i class="fa-solid fa-headphones-simple text-rose-500"></i>';
+        localDeafenIcon.classList.remove('hidden');
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-headphones"></i>';
+        localDeafenIcon.classList.add('hidden');
+      }
     }
 
     function toggleCam() {
@@ -772,17 +846,21 @@
       if (!isSharingScreen) {
         try {
           screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          playAudioTone('screen_start'); // Som ao iniciar compartilhamento
           const screenTrack = screenStream.getVideoTracks()[0];
           document.getElementById('local-video').srcObject = screenStream;
           isSharingScreen = true;
           document.getElementById('local-avatar-placeholder').classList.add('hidden');
           screenTrack.onended = () => { stopScreenShare(); };
         } catch (err) { console.error(err); }
-      } else { stopScreenShare(); }
+      } else { 
+        stopScreenShare(); 
+      }
     }
 
     function stopScreenShare() {
       if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+      playAudioTone('screen_stop'); // Som ao parar compartilhamento
       document.getElementById('local-video').srcObject = localStream;
       isSharingScreen = false;
       document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
