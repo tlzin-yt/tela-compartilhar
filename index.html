@@ -89,11 +89,21 @@
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        const savedUser = localStorage.getItem('omnicall_user');
+        let avatar = user.photoURL || '';
+        let name = user.displayName || user.email.split('@')[0];
+
+        if (savedUser) {
+          const parsed = JSON.parse(savedUser);
+          if (parsed.avatar) avatar = parsed.avatar;
+          if (parsed.name) name = parsed.name;
+        }
+
         window.handleLoginSuccess({
-          name: user.displayName || user.email.split('@')[0],
+          name: name,
           email: user.email,
-          avatar: user.photoURL || ''
-        }, false);
+          avatar: avatar
+        }, true);
       } else {
         document.getElementById('auth-screen').classList.remove('hidden');
         document.getElementById('setup-screen').classList.add('hidden');
@@ -128,7 +138,7 @@
     </div>
   </div>
 
-  <!-- BARRA LATERAL (MENU CLEAN LIGHT) -->
+  <!-- BARRA LATERAL -->
   <aside id="mobile-sidebar" class="hidden md:flex w-full md:w-80 bg-white border-r border-slate-200 flex-col h-full z-20 absolute md:relative inset-0 shadow-sm">
     <div class="p-4 border-b border-slate-100 flex items-center justify-between">
       <div class="flex items-center space-x-3">
@@ -146,7 +156,6 @@
     </div>
 
     <div class="flex-1 overflow-y-auto p-3 space-y-6">
-      <!-- Início / Criar Sala -->
       <div>
         <button onclick="showQuickCallSection()" class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-emerald-500 text-white font-semibold text-sm hover:bg-emerald-600 transition shadow-sm">
           <i class="fa-solid fa-plus"></i>
@@ -293,11 +302,11 @@
           <div id="local-video-container" class="relative bg-slate-950 border border-slate-800 rounded-xl overflow-hidden aspect-video flex items-center justify-center shadow-lg">
             <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
             <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden">
-              <img id="local-placeholder-img" src="" class="w-16 h-16 rounded-full object-cover border-2 border-slate-700 hidden">
-              <div id="local-placeholder-fallback" class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-xl font-bold text-white">?</div>
+              <img id="local-placeholder-img" src="" class="w-20 h-20 rounded-full object-cover border-2 border-emerald-500 hidden">
+              <div id="local-placeholder-fallback" class="w-20 h-20 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center text-2xl font-bold text-white">?</div>
             </div>
-            <div class="absolute bottom-3 left-3 bg-slate-900/80 px-2.5 py-1 rounded-md text-xs font-medium text-white">
-              Você
+            <div class="absolute bottom-3 left-3 bg-slate-900/80 px-2.5 py-1 rounded-md text-xs font-medium text-white flex items-center space-x-1">
+              <span id="local-label-name">Você</span>
             </div>
           </div>
         </div>
@@ -354,8 +363,8 @@
           <input type="text" id="profile-name-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL da Foto</label>
-          <input type="text" id="profile-avatar-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL da Foto de Perfil</label>
+          <input type="text" id="profile-avatar-input" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
         </div>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
@@ -365,7 +374,7 @@
     </div>
   </div>
 
-  <!-- Modal Adicionar Amigo (Otimizado para Celular) -->
+  <!-- Modal Adicionar Amigo -->
   <div id="modal-add-friend" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white border border-slate-200 w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -403,7 +412,7 @@
 
   <!-- SCRIPT APLICAÇÃO -->
   <script>
-    let currentUser = { name: '', avatar: '', bio: '', peerId: '' };
+    let currentUser = { name: '', avatar: '', bio: '', email: '', peerId: '' };
     let friendsList = [];
     let groupsList = [];
     
@@ -429,10 +438,13 @@
 
     window.handleLoginSuccess = function(userData, save = true) {
       currentUser.name = userData.name;
-      currentUser.avatar = userData.avatar;
+      currentUser.email = userData.email || '';
+      currentUser.avatar = userData.avatar || currentUser.avatar || '';
+
       if (save) {
-        localStorage.setItem('omnicall_user', JSON.stringify(currentUser));
+        saveUserData();
       }
+
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('setup-screen').classList.remove('hidden');
       loadUserData();
@@ -454,6 +466,13 @@
 
     function loadUserData() {
       const userKey = currentUser.email ? `_` + currentUser.email : '';
+      const savedUser = localStorage.getItem('omnicall_user' + userKey);
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        if (u.name) currentUser.name = u.name;
+        if (u.avatar) currentUser.avatar = u.avatar;
+      }
+
       const savedFriends = localStorage.getItem('omnicall_friends' + userKey);
       if (savedFriends) friendsList = JSON.parse(savedFriends);
       const savedGroups = localStorage.getItem('omnicall_groups' + userKey);
@@ -466,6 +485,7 @@
 
     function saveUserData() {
       const userKey = currentUser.email ? `_` + currentUser.email : '';
+      localStorage.setItem('omnicall_user' + userKey, JSON.stringify(currentUser));
       localStorage.setItem('omnicall_user', JSON.stringify(currentUser));
       localStorage.setItem('omnicall_friends' + userKey, JSON.stringify(friendsList));
       localStorage.setItem('omnicall_groups' + userKey, JSON.stringify(groupsList));
@@ -490,6 +510,19 @@
           sidebarFallback.classList.remove('hidden');
           sidebarFallback.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
         }
+      }
+
+      // Atualizar foto de perfil do card local na chamada
+      const localFallbackImg = document.getElementById('local-placeholder-img');
+      const localFallbackChar = document.getElementById('local-placeholder-fallback');
+      if (currentUser.avatar) {
+        localFallbackImg.src = currentUser.avatar;
+        localFallbackImg.classList.remove('hidden');
+        localFallbackChar.classList.add('hidden');
+      } else {
+        localFallbackImg.classList.add('hidden');
+        localFallbackChar.classList.remove('hidden');
+        localFallbackChar.textContent = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : '?';
       }
     }
 
@@ -716,6 +749,7 @@
         }
       } else if (data.type === 'profile') {
         remoteProfiles[peerId] = { name: data.name, avatar: data.avatar };
+        updateRemoteTileMetadata(peerId, data.name, data.avatar);
       } else if (data.type === 'chat') {
         appendChatMessage(data.sender, data.message);
       }
@@ -748,15 +782,35 @@
 
       const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '' };
 
+      const avatarDiv = document.createElement('div');
+      avatarDiv.id = `remote-avatar-${peerId}`;
+      avatarDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden';
+      avatarDiv.innerHTML = profile.avatar 
+        ? `<img src="${profile.avatar}" class="w-20 h-20 rounded-full object-cover border-2 border-emerald-500">`
+        : `<div class="w-20 h-20 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center text-2xl font-bold text-white">${profile.name.charAt(0).toUpperCase()}</div>`;
+
       const label = document.createElement('div');
-      label.className = 'absolute bottom-3 left-3 bg-slate-900/80 px-2.5 py-1 rounded-md text-xs font-medium text-white';
-      label.textContent = profile.name;
+      label.className = 'absolute bottom-3 left-3 bg-slate-900/80 px-2.5 py-1 rounded-md text-xs font-medium text-white flex items-center space-x-1';
+      label.innerHTML = `<span id="remote-name-${peerId}">${profile.name}</span>`;
 
       container.appendChild(video);
+      container.appendChild(avatarDiv);
       container.appendChild(label);
       grid.appendChild(container);
 
       updateParticipantCount();
+    }
+
+    function updateRemoteTileMetadata(peerId, name, avatar) {
+      const nameEl = document.getElementById(`remote-name-${peerId}`);
+      if (nameEl) nameEl.textContent = name;
+
+      const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
+      if (avatarDiv) {
+        avatarDiv.innerHTML = avatar 
+          ? `<img src="${avatar}" class="w-20 h-20 rounded-full object-cover border-2 border-emerald-500">`
+          : `<div class="w-20 h-20 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center text-2xl font-bold text-white">${name.charAt(0).toUpperCase()}</div>`;
+      }
     }
 
     function removeRemoteVideo(peerId) {
