@@ -13,7 +13,7 @@
   <!-- PeerJS CDN -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-  <!-- Firebase App & Auth SDK (v10) - CORRIGIDO -->
+  <!-- Firebase App & Auth SDK (v10) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { 
@@ -362,10 +362,10 @@
           <i class="fa-solid fa-door-open"></i>
         </div>
         <h2 class="text-2xl font-black text-slate-900 tracking-tight">Pronto para participar?</h2>
-        <p class="text-xs text-slate-500 font-medium">Certifique-se de permitir o acesso ao microfone no seu navegador.</p>
+        <p class="text-xs text-slate-500 font-medium">Permita o acesso ao microfone e câmara para entrar na chamada.</p>
         
         <div class="space-y-3 pt-2">
-          <button onclick="sendJoinRequest()" class="btn-press w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/30">
+          <button onclick="startGuestJoinFlow()" class="btn-press w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/30">
             Pedir para participar
           </button>
           
@@ -895,6 +895,39 @@
       initPeerMesh(forceHost);
     }
 
+    // NOVA FUNÇÃO: Obtém microfone/câmara do convidado antes de pedir entrada
+    async function startGuestJoinFlow() {
+      ensureAudioContext();
+      if (!currentRoomCode) return;
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: { echoCancellation: true, noiseSuppression: true } 
+        });
+        document.getElementById('local-video').srcObject = localStream;
+        document.getElementById('local-avatar-placeholder').classList.add('hidden');
+        isCamOff = false;
+      } catch (err) {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: { echoCancellation: true, noiseSuppression: true } 
+          });
+          showToast('Câmera indisponível. Entrando apenas com microfone.', 'success');
+        } catch(e) {
+          showToast('Erro: Acesso ao microfone negado ou indisponível!', 'error');
+          localStream = new MediaStream();
+        }
+        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
+        isCamOff = true;
+        document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
+      }
+
+      updateLocalTileUI();
+      setupLocalAudioDetection();
+      sendJoinRequest();
+    }
+
     function updateLocalTileUI() {
       document.getElementById('local-label-name').textContent = currentUser.name;
       const img = document.getElementById('local-placeholder-img');
@@ -988,7 +1021,6 @@
     }
 
     function sendJoinRequest() {
-      ensureAudioContext();
       document.getElementById('step-prejoin').classList.add('hidden');
       document.getElementById('step-waiting').classList.remove('hidden');
 
@@ -1458,6 +1490,8 @@
               const videoSender = senders.find(s => s.track && s.track.kind === 'video');
               if (videoSender) {
                 videoSender.replaceTrack(screenVideoTrack);
+              } else {
+                call.peerConnection.addTrack(screenVideoTrack, screenStream);
               }
             }
           });
