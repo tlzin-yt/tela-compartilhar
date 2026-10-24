@@ -9,7 +9,7 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- PeerJS CDN -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
@@ -128,20 +128,19 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
 
     .bg-grid-pattern {
-      background-size: 30px 30px;
+      background-size: 32px 32px;
       background-image: 
-        linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+        linear-gradient(to right, rgba(203, 213, 225, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(203, 213, 225, 0.4) 1px, transparent 1px);
     }
 
     .btn-press {
-      transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+      transition: transform 0.12s ease, background-color 0.2s ease, box-shadow 0.2s ease;
     }
     .btn-press:active {
-      transform: scale(0.97) !important;
+      transform: scale(0.95) !important;
     }
 
-    /* AURA AZUL NEON AO FALAR */
     .speaking-aura {
       border-color: #2563eb !important;
       box-shadow: 0 0 25px rgba(37, 99, 235, 0.8), inset 0 0 15px rgba(37, 99, 235, 0.4) !important;
@@ -157,28 +156,24 @@
 </head>
 <body class="bg-slate-50 bg-grid-pattern text-slate-800 min-h-screen flex flex-col justify-between items-center select-none antialiased relative overflow-x-hidden">
 
-  <!-- LUZES DE GLOW DE FUNDO -->
-  <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/15 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="absolute bottom-10 right-1/4 w-96 h-96 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute -top-20 left-1/3 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute bottom-10 right-10 w-[450px] h-[450px] bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-  <!-- CONTAINER DE NOTIFICAÇÕES TOAST (Canto Superior Direito) -->
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2.5 pointer-events-none"></div>
 
-  <!-- CABEÇALHO SUPERIOR -->
-  <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-8 py-4 flex items-center justify-between sticky top-0 left-0 z-20 shadow-sm">
+  <header class="w-full bg-white/90 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 left-0 z-20 shadow-sm">
     <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-blue-600/30">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xl font-black shadow-md shadow-blue-600/30">
         <i class="fa-solid fa-video"></i>
       </div>
       <div>
         <span class="font-extrabold text-slate-900 text-lg tracking-tight block leading-tight">OmniCall</span>
-        <span class="text-[11px] text-blue-600 font-bold uppercase tracking-wider block">Video Conferencing</span>
+        <span class="text-[10px] text-blue-600 font-bold uppercase tracking-wider block">P2P Video Network</span>
       </div>
     </div>
 
-    <!-- ÁREA DIREITA DO CABEÇALHO -->
     <div class="flex items-center space-x-4">
-      <div id="header-clock" class="hidden md:block text-xs font-semibold text-slate-500 bg-slate-100/80 px-3.5 py-1.5 rounded-xl border border-slate-200">
+      <div id="header-clock" class="hidden md:block text-xs font-bold text-slate-600 bg-slate-100 px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-inner">
         00:00 • 00/00/0000
       </div>
       <button id="btn-header-logout" onclick="window.logoutUser()" class="hidden btn-press px-4 py-2 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-200 flex items-center space-x-1.5">
@@ -188,44 +183,43 @@
     </div>
   </header>
 
-  <!-- ÁREA PRINCIPAL -->
   <main class="w-full max-w-6xl px-6 py-8 my-auto flex flex-col items-center justify-center z-10">
 
     <!-- ETAPA 1: LOGIN -->
     <div id="step-auth" class="w-full max-w-md">
-      <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-8 rounded-3xl shadow-2xl space-y-6">
+      <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-8 rounded-3xl shadow-2xl space-y-6">
         <div class="text-center space-y-2">
-          <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-blue-100 mb-2">
+          <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto border border-blue-100 shadow-sm mb-2">
             <i class="fa-solid fa-user-lock"></i>
           </div>
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Bem-vindo ao OmniCall</h2>
-          <p class="text-xs text-slate-500">Inicie sessão para aceder às suas videochamadas.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Entrar no OmniCall</h2>
+          <p class="text-xs text-slate-500 font-medium">Acesse sua conta para iniciar chamadas ilimitadas.</p>
         </div>
 
-        <button onclick="window.signInWithGoogle()" class="btn-press w-full py-3.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold rounded-2xl text-sm transition border border-slate-200 flex items-center justify-center space-x-3 shadow-sm">
+        <button onclick="window.signInWithGoogle()" class="btn-press w-full py-3.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-2xl text-sm transition border border-slate-200 flex items-center justify-center space-x-3 shadow-sm">
           <i class="fa-brands fa-google text-lg text-red-500"></i>
           <span>Entrar com a Conta Google</span>
         </button>
 
         <div class="flex items-center my-4">
           <div class="flex-1 border-t border-slate-200"></div>
-          <span class="px-3 text-[11px] text-slate-400 font-bold uppercase tracking-wider">ou e-mail</span>
+          <span class="px-3 text-[11px] text-slate-400 font-bold uppercase tracking-wider">ou com e-mail</span>
           <div class="flex-1 border-t border-slate-200"></div>
         </div>
 
         <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
           <div>
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">E-mail</label>
-            <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition">
+            <input type="email" id="auth-email" required placeholder="seu@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition font-semibold">
           </div>
           <div>
             <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
-            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition">
+            <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition font-semibold">
           </div>
 
           <div class="grid grid-cols-2 gap-3 pt-2">
-            <button type="button" onclick="handleRegister()" class="btn-press w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition border border-slate-200">Criar Conta</button>
-            <button type="submit" class="btn-press w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs transition shadow-md shadow-blue-600/20">Entrar</button>
+            <button type="button" onclick="handleRegister()" class="btn-press w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition border border-slate-200">Criar Conta</button>
+            <button type="submit" class="btn-press w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs transition shadow-md shadow-blue-600/30">Entrar</button>
           </div>
         </form>
       </div>
@@ -233,21 +227,21 @@
 
     <!-- ETAPA 2: ESCOLHER PERFIL -->
     <div id="step-profile" class="hidden w-full max-w-md">
-      <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-8 rounded-3xl shadow-2xl space-y-6">
+      <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-8 rounded-3xl shadow-2xl space-y-6">
         <div class="text-center space-y-1">
-          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Configure o seu Perfil</h2>
-          <p class="text-xs text-slate-500">Defina a sua foto e nome para os outros participantes.</p>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Configure seu Perfil</h2>
+          <p class="text-xs text-slate-500 font-medium">Sua foto e nome exibidos durante a chamada.</p>
         </div>
 
         <div class="flex flex-col items-center space-y-4">
           <div class="relative">
-            <div class="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-lg shadow-blue-600/20">
+            <div class="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-xl shadow-blue-600/20">
               <img id="profile-preview-img" src="" class="w-full h-full rounded-full object-cover bg-slate-100 hidden">
-              <div id="profile-preview-fallback" class="w-full h-full rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-4xl">?</div>
+              <div id="profile-preview-fallback" class="w-full h-full rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-400 text-4xl">?</div>
             </div>
           </div>
 
-          <label class="btn-press cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center space-x-2">
+          <label class="btn-press cursor-pointer px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition flex items-center space-x-2">
             <i class="fa-solid fa-camera text-blue-600"></i>
             <span>Escolher Foto da Galeria</span>
             <input type="file" id="file-input-gallery" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
@@ -255,103 +249,105 @@
         </div>
 
         <div>
-          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">O seu Nome / Apelido</label>
-          <input type="text" id="profile-name-input" placeholder="Como quer ser chamado..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition font-medium">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seu Nome / Apelido</label>
+          <input type="text" id="profile-name-input" placeholder="Como quer ser chamado..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition font-bold">
         </div>
 
-        <button onclick="confirmProfile()" class="btn-press w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/20">
+        <button onclick="confirmProfile()" class="btn-press w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/30">
           Avançar para o Painel <i class="fa-solid fa-arrow-right ml-1.5"></i>
         </button>
       </div>
     </div>
 
-    <!-- ETAPA 3: DASHBOARD DE SALAS -->
+    <!-- ETAPA 3: DASHBOARD COMPLETO -->
     <div id="step-room" class="hidden w-full">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
-        <!-- LADO ESQUERDO: APRESENTAÇÃO E AÇÕES -->
         <div class="lg:col-span-7 space-y-6">
-          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-100/70 border border-blue-200 text-blue-700 text-xs font-bold shadow-sm">
-            <i class="fa-solid fa-shield-halved text-blue-600"></i>
-            <span>Conexão Direta P2P Criptografada</span>
+          <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-blue-100/80 border border-blue-200 text-blue-700 text-xs font-bold shadow-sm">
+            <i class="fa-solid fa-shield-halved text-blue-600 text-sm"></i>
+            <span>Conexão Direta Peer-to-Peer sem Intermediários</span>
           </div>
 
-          <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Videochamadas simples, rápidas e sem limites.
+          <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            Videochamadas de alta qualidade em um clique.
           </h1>
-          <p class="text-slate-500 text-base max-w-xl leading-relaxed">
-            Crie reuniões instantâneas em alta qualidade com um clique ou entre em chamadas ativas digitando o código da sala.
+          <p class="text-slate-600 text-base max-w-xl leading-relaxed font-medium">
+            Crie reuniões privadas instantâneas ou participe de uma chamada existente inserindo o código da sala abaixo.
           </p>
 
-          <!-- CAIXA PRINCIPAL DE AÇÃO -->
-          <div class="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-slate-200 shadow-xl space-y-4 max-w-xl">
+          <div class="bg-white/95 backdrop-blur-md p-6 rounded-3xl border border-slate-200 shadow-2xl space-y-4 max-w-xl">
             <div class="flex flex-col sm:flex-row items-center gap-3">
-              <!-- BOTÃO CRIAR CALL -->
-              <button onclick="createNewCall()" class="btn-press w-full sm:w-auto px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2.5 shrink-0">
-                <i class="fa-solid fa-video text-base"></i>
-                <span>Nova Chamada</span>
+              <button onclick="createNewCall()" class="btn-press w-full sm:w-auto px-7 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl text-sm transition shadow-lg shadow-blue-600/35 flex items-center justify-center space-x-3 shrink-0">
+                <i class="fa-solid fa-plus-circle text-lg"></i>
+                <span>Criar Call Nova</span>
               </button>
 
-              <!-- CAMPO CÓDIGO DA SALA -->
               <div class="relative w-full flex items-center">
-                <span class="absolute left-4 text-slate-400"><i class="fa-solid fa-keyboard"></i></span>
-                <input type="text" id="room-code-input" placeholder="Digite o código da sala..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-10 pr-24 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition font-semibold">
-                <button onclick="joinExistingCall()" class="absolute right-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-sm">
+                <span class="absolute left-4 text-slate-400"><i class="fa-solid fa-hashtag text-base"></i></span>
+                <input type="text" id="room-code-input" placeholder="Cole ou digite o código..." class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-11 pr-24 text-sm text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white transition font-bold tracking-wide">
+                <button onclick="joinExistingCall()" class="absolute right-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-md">
                   Entrar
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- CARDS DE ESTATÍSTICAS / DECORAÇÃO INFERIOR -->
-          <div class="grid grid-cols-3 gap-4 pt-2 max-w-xl">
-            <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
-              <span class="block font-extrabold text-blue-600 text-lg">0 ms</span>
-              <span class="text-[11px] font-semibold text-slate-400 uppercase">Servidor P2P</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl pt-2">
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+              <i class="fa-solid fa-bolt text-blue-600 text-lg mb-1"></i>
+              <span class="text-xs font-extrabold text-slate-800">Ultra Rápido</span>
+              <span class="text-[10px] font-semibold text-slate-400">P2P Direto</span>
             </div>
-            <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
-              <span class="block font-extrabold text-indigo-600 text-lg">1080p</span>
-              <span class="text-[11px] font-semibold text-slate-400 uppercase">Qualidade HD</span>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+              <i class="fa-solid fa-lock text-indigo-600 text-lg mb-1"></i>
+              <span class="text-xs font-extrabold text-slate-800">Privado</span>
+              <span class="text-[10px] font-semibold text-slate-400">Com aprovação</span>
             </div>
-            <div class="bg-white/80 backdrop-blur-sm p-3.5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
-              <span class="block font-extrabold text-emerald-600 text-lg">100%</span>
-              <span class="text-[11px] font-semibold text-slate-400 uppercase">Gratuito</span>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+              <i class="fa-solid fa-desktop text-emerald-600 text-lg mb-1"></i>
+              <span class="text-xs font-extrabold text-slate-800">Compartilhe</span>
+              <span class="text-[10px] font-semibold text-slate-400">Sua tela HD</span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+              <i class="fa-solid fa-infinity text-purple-600 text-lg mb-1"></i>
+              <span class="text-xs font-extrabold text-slate-800">Sem Limites</span>
+              <span class="text-[10px] font-semibold text-slate-400">100% Grátis</span>
             </div>
           </div>
         </div>
 
-        <!-- LADO DIREITO: ILUSTRAÇÃO INTERATIVA DE SALA -->
         <div class="lg:col-span-5">
-          <div class="bg-white/90 backdrop-blur-md border border-slate-200/90 p-6 rounded-3xl shadow-2xl space-y-5 relative">
-            
-            <!-- MOSAICO ILUSTRATIVO DE VÍDEO -->
-            <div class="grid grid-cols-2 gap-3 relative">
-              <div class="bg-slate-900 rounded-2xl h-32 flex flex-col items-center justify-center relative overflow-hidden border border-slate-800 shadow-md">
-                <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
+          <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-2xl space-y-5 relative">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-extrabold text-slate-800">Preview da Sala Ativa</span>
+              </div>
+              <span class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">P2P HD</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-slate-900 rounded-2xl h-36 flex flex-col items-center justify-center relative overflow-hidden border border-slate-800 shadow-inner">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-blue-600/40">
                   <i class="fa-solid fa-user"></i>
                 </div>
-                <span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-lg backdrop-blur-sm">Você</span>
+                <span class="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">Você (Anfitrião)</span>
               </div>
 
-              <div class="bg-slate-800 rounded-2xl h-32 flex flex-col items-center justify-center relative overflow-hidden border border-slate-700 shadow-md">
-                <div class="w-12 h-12 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-lg shadow-md">
-                  <i class="fa-solid fa-user-group"></i>
+              <div class="bg-slate-800 rounded-2xl h-36 flex flex-col items-center justify-center relative overflow-hidden border border-slate-700 shadow-inner">
+                <div class="w-14 h-14 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center font-black text-xl border border-slate-600 shadow-lg">
+                  <i class="fa-solid fa-user-plus"></i>
                 </div>
-                <span class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-lg backdrop-blur-sm">Convidado</span>
+                <span class="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">Aguardando...</span>
               </div>
             </div>
 
-            <div class="space-y-1.5 text-center">
-              <h3 class="text-lg font-extrabold text-slate-900">Sua sala estará pronta em segundos</h3>
-              <p class="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
-                Partilhe o link da videochamada com quem quiser e controlem a entrada no painel.
+            <div class="space-y-1 text-center pt-1">
+              <h3 class="text-base font-extrabold text-slate-900">Gerenciamento de Convidados</h3>
+              <p class="text-xs text-slate-500 leading-relaxed font-medium max-w-xs mx-auto">
+                Ao criar a call, você poderá aprovar e recusar participantes com um clique.
               </p>
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 flex items-center justify-around text-slate-500 text-xs font-semibold">
-              <span class="flex items-center space-x-1.5"><i class="fa-solid fa-lock text-blue-600"></i><span>Privado</span></span>
-              <span class="flex items-center space-x-1.5"><i class="fa-solid fa-bolt text-indigo-600"></i><span>Sem Latência</span></span>
-              <span class="flex items-center space-x-1.5"><i class="fa-solid fa-desktop text-emerald-600"></i><span>Partilha de Ecrã</span></span>
             </div>
           </div>
         </div>
@@ -361,19 +357,19 @@
 
     <!-- TELA DE PRÉ-ENTRADA -->
     <div id="step-prejoin" class="hidden w-full max-w-md">
-      <div class="bg-white/95 backdrop-blur-md text-slate-900 border border-slate-200/80 p-8 rounded-3xl shadow-2xl space-y-6 text-center">
-        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto border border-blue-100">
+      <div class="bg-white text-slate-900 border border-slate-200 p-8 rounded-3xl shadow-2xl space-y-6 text-center">
+        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mx-auto border border-blue-100 shadow-sm">
           <i class="fa-solid fa-door-open"></i>
         </div>
-        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Pronto para participar?</h2>
-        <p class="text-xs text-slate-500">Solicite permissão ao anfitrião para entrar na sala.</p>
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Pronto para participar?</h2>
+        <p class="text-xs text-slate-500 font-medium">Certifique-se de permitir o acesso ao microfone no seu navegador.</p>
         
         <div class="space-y-3 pt-2">
-          <button onclick="sendJoinRequest()" class="btn-press w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/20">
+          <button onclick="sendJoinRequest()" class="btn-press w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/30">
             Pedir para participar
           </button>
           
-          <button onclick="location.href=location.pathname" class="w-full py-3 text-slate-500 hover:text-slate-900 text-xs font-semibold transition">
+          <button onclick="location.href=location.pathname" class="w-full py-3 text-slate-500 hover:text-slate-900 text-xs font-bold transition">
             Voltar ao Início
           </button>
         </div>
@@ -382,15 +378,15 @@
 
     <!-- TELA DE ESPERA -->
     <div id="step-waiting" class="hidden w-full max-w-md">
-      <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-8 rounded-3xl shadow-2xl space-y-6 text-center text-slate-800">
+      <div class="bg-white border border-slate-200 p-8 rounded-3xl shadow-2xl space-y-6 text-center text-slate-800">
         <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto border border-blue-100 animate-pulse">
           <i class="fa-solid fa-user-clock"></i>
         </div>
         <div>
           <h2 class="text-xl font-bold text-slate-900 tracking-tight mb-2">Aguardando autorização...</h2>
-          <p class="text-xs text-slate-500">O anfitrião foi notificado. Por favor aguarde a confirmação.</p>
+          <p class="text-xs text-slate-500 font-medium">O anfitrião foi notificado. Por favor aguarde a confirmação.</p>
         </div>
-        <button onclick="cancelJoinRequest()" class="btn-press w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition border border-slate-200">
+        <button onclick="cancelJoinRequest()" class="btn-press w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition border border-slate-200">
           Cancelar Pedido
         </button>
       </div>
@@ -400,34 +396,30 @@
 
   <!-- ETAPA 4: TELA DA CALL -->
   <div id="step-call" class="hidden fixed inset-0 bg-slate-950 flex flex-col z-30 text-slate-100">
-    <!-- Topbar da Call -->
-    <div class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between">
+    <div class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <span id="connection-dot" class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
+        <span id="connection-dot" class="w-3.5 h-3.5 rounded-full bg-amber-500 animate-pulse"></span>
         <div>
-          <h3 id="current-room-title" class="font-bold text-white text-sm">Sala: -</h3>
-          <p class="text-[11px] text-slate-400"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> pessoa(s)</p>
+          <h3 id="current-room-title" class="font-extrabold text-white text-base">Sala: -</h3>
+          <p class="text-xs text-slate-400 font-medium"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> pessoa(s)</p>
         </div>
       </div>
 
-      <!-- ÁREA CONVIDADOS NO CANTO SUPERIOR DIREITO -->
       <div id="host-guests-wrapper" class="hidden relative">
-        <button onclick="toggleGuestsMenu()" class="btn-press px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-2 border border-slate-700 shadow-sm relative">
-          <i class="fa-solid fa-user-plus text-blue-400"></i>
+        <button onclick="toggleGuestsMenu()" class="btn-press px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-bold transition flex items-center space-x-2 border border-slate-700 shadow-md relative">
+          <i class="fa-solid fa-user-plus text-blue-400 text-sm"></i>
           <span>CONVIDADOS</span>
-          <span id="guests-badge" class="hidden absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md animate-pulse">0</span>
+          <span id="guests-badge" class="hidden absolute -top-2 -right-2 bg-rose-500 text-white text-[11px] font-extrabold rounded-full w-6 h-6 flex items-center justify-center shadow-lg animate-pulse">0</span>
         </button>
 
-        <!-- MENU DROPDOWN DE SOLICITAÇÕES COM BOTÃO COPIAR LINK -->
-        <div id="guests-dropdown" class="hidden absolute top-12 right-0 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
+        <div id="guests-dropdown" class="hidden absolute top-14 right-0 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <h4 class="text-xs font-bold text-white uppercase tracking-wider">Gerenciar Entrada</h4>
             <span id="guests-count-text" class="text-[11px] text-slate-400">0 pendente(s)</span>
           </div>
 
-          <!-- BOTÃO PARA COPIAR LINK DENTRO DO MENU CONVIDADOS -->
-          <button onclick="copyCurrentCallLink()" class="btn-press w-full py-2.5 px-3 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl text-xs font-bold border border-blue-500/30 transition flex items-center justify-center space-x-2">
-            <i class="fa-regular fa-copy"></i>
+          <button onclick="copyCurrentCallLink()" class="btn-press w-full py-3 px-3 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl text-xs font-bold border border-blue-500/40 transition flex items-center justify-center space-x-2 shadow-sm">
+            <i class="fa-regular fa-copy text-sm"></i>
             <span>Copiar Link da Call</span>
           </button>
 
@@ -443,10 +435,10 @@
       <div id="local-video-container" class="relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl transition-all duration-150">
         <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
         <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3">
-          <img id="local-placeholder-img" src="" class="w-28 h-28 rounded-full object-cover border-4 border-slate-700 shadow-xl hidden transition-all duration-150">
-          <div id="local-placeholder-fallback" class="w-28 h-28 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-4xl font-bold text-white shadow-xl transition-all duration-150">?</div>
+          <img id="local-placeholder-img" src="" class="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl hidden transition-all duration-150">
+          <div id="local-placeholder-fallback" class="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl font-black text-white shadow-xl transition-all duration-150">?</div>
         </div>
-        <div class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg">
+        <div class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg">
           <span id="local-deafen-icon" class="text-rose-400 hidden" title="Full Mutado"><i class="fa-solid fa-headphones-simple text-xs"></i></span>
           <span id="local-mic-icon" class="text-rose-400 hidden" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
           <span id="local-label-name">Você</span>
@@ -454,8 +446,7 @@
       </div>
     </div>
 
-    <!-- CARD FLUTUANTE INFERIOR ESQUERDO: "Sua call está pronta" -->
-    <div id="meet-invite-card" class="hidden absolute bottom-24 left-6 w-80 bg-white text-slate-800 rounded-2xl shadow-2xl p-5 border border-slate-200 z-40 transition-all duration-300">
+    <div id="meet-invite-card" class="hidden absolute bottom-28 left-6 w-80 bg-white text-slate-800 rounded-2xl shadow-2xl p-5 border border-slate-200 z-40 transition-all duration-300">
       <div class="flex items-center justify-between mb-3">
         <h4 class="font-bold text-slate-900 text-sm">Sua call está pronta</h4>
         <button onclick="closeMeetInviteCard()" class="text-slate-400 hover:text-slate-700 text-sm p-1 rounded-lg transition">
@@ -478,29 +469,28 @@
       <p class="text-[11px] text-slate-400 truncate">Participando como <span id="meet-user-email-label" class="font-semibold text-slate-600"></span></p>
     </div>
 
-    <!-- Barra de Controles da Call -->
-    <div class="bg-slate-900 border-t border-slate-800 py-4 px-6 flex items-center justify-center space-x-4">
-      <button id="btn-toggle-mic" onclick="toggleMic()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md border border-slate-700" title="Microfone">
+    <!-- Barra de Controles -->
+    <div class="bg-slate-900 border-t border-slate-800 py-5 px-6 flex items-center justify-center space-x-5">
+      <button id="btn-toggle-mic" onclick="toggleMic()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Microfone">
         <i class="fa-solid fa-microphone"></i>
       </button>
-      <button id="btn-toggle-deafen" onclick="toggleDeafen()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md border border-slate-700" title="Full Mutar (Fone e Mic)">
+      <button id="btn-toggle-deafen" onclick="toggleDeafen()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Full Mutar (Fone e Mic)">
         <i class="fa-solid fa-headphones"></i>
       </button>
-      <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md border border-slate-700" title="Câmera">
+      <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Câmera">
         <i class="fa-solid fa-video"></i>
       </button>
-      <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="btn-press w-13 h-13 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 flex items-center justify-center transition text-lg shadow-md" title="Compartilhar Tela">
+      <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center transition text-2xl shadow-lg shrink-0" title="Compartilhar Tela">
         <i class="fa-solid fa-desktop"></i>
       </button>
-      <button onclick="leaveCall()" class="btn-press w-13 h-13 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-lg shadow-lg shadow-rose-600/30" title="Sair da Chamada">
+      <button onclick="leaveCall()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-2xl shadow-xl shadow-rose-600/40 shrink-0" title="Sair da Chamada">
         <i class="fa-solid fa-phone-slash"></i>
       </button>
     </div>
   </div>
 
-  <!-- RODAPÉ FIXO -->
-  <footer class="w-full text-center py-4 border-t border-slate-200/80 text-xs text-slate-400 bg-white/80 backdrop-blur-md z-10">
-    OmniCall © 2026 • Tecnologia Peer-to-Peer Criptografada
+  <footer class="w-full text-center py-4 border-t border-slate-200 text-xs text-slate-400 bg-white/80 backdrop-blur-md z-10 font-medium">
+    OmniCall © 2026 • Redes Peer-to-Peer Criptografadas
   </footer>
 
   <script>
@@ -881,10 +871,12 @@
         document.getElementById('local-avatar-placeholder').classList.add('hidden');
         isCamOff = false;
       } catch (err) {
-        console.warn('Câmera indisponível:', err);
+        console.warn('Câmera/Microfone com falha:', err);
         try {
           localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          showToast('Câmera indisponível, ativando apenas áudio.', 'success');
         } catch(e) {
+          showToast('Erro crítico: Permissão de microfone negada no navegador!', 'error');
           localStream = new MediaStream();
         }
         document.getElementById('local-avatar-placeholder').classList.remove('hidden');
@@ -982,7 +974,6 @@
       });
     }
 
-    // COPIAR LINK DA CALL DENTRO DO MENU CONVIDADOS
     function copyCurrentCallLink() {
       const fullLink = `${window.location.origin}${window.location.pathname}?sala=${encodeURIComponent(currentRoomCode)}`;
       navigator.clipboard.writeText(fullLink).then(() => {
@@ -1023,6 +1014,7 @@
             document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
             updateConnectionStatus('connected', 'Conectado!');
 
+            // Conectando mídia bidirecional com o host
             const call = peer.call(targetHostPeerId, localStream);
             if (call) handleIncomingStream(call);
           } else {
@@ -1131,6 +1123,7 @@
         activeConnections[data.peerId] = conn;
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted, isDeafened: data.isDeafened };
 
+        // Anfitrião chama o convidado enviando seu fluxo de mídia local
         const call = peer.call(data.peerId, localStream);
         if (call) handleIncomingStream(call);
 
@@ -1150,6 +1143,7 @@
 
     function setupPeerEvents(pInstance) {
       pInstance.on('call', (call) => {
+        // Responde automaticamente ao chamado de áudio/vídeo do convidado
         call.answer(localStream);
         handleIncomingStream(call);
       });
@@ -1238,11 +1232,11 @@
         const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
         avatarDiv.className = `absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3 ${hasVideo ? 'hidden' : ''}`;
         avatarDiv.innerHTML = profile.avatar 
-          ? `<img src="${profile.avatar}" class="w-28 h-28 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
-          : `<div class="w-28 h-28 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-4xl font-bold text-white shadow-xl transition-all duration-150">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
+          ? `<img src="${profile.avatar}" class="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
+          : `<div class="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl font-black text-white shadow-xl transition-all duration-150">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
 
         const label = document.createElement('div');
-        label.className = 'absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg';
+        label.className = 'absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg';
         label.innerHTML = `
           <span id="remote-deafen-icon-${peerId}" class="text-rose-400 ${profile.isDeafened ? '' : 'hidden'}" title="Full Mutado"><i class="fa-solid fa-headphones-simple text-xs"></i></span>
           <span id="remote-mic-icon-${peerId}" class="text-rose-400 ${profile.isMuted ? '' : 'hidden'}" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
@@ -1280,8 +1274,8 @@
       const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
       if (avatarDiv) {
         avatarDiv.innerHTML = avatar 
-          ? `<img src="${avatar}" class="w-28 h-28 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
-          : `<div class="w-28 h-28 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-4xl font-bold text-white shadow-xl transition-all duration-150">${name ? name.charAt(0).toUpperCase() : '?'}</div>`;
+          ? `<img src="${avatar}" class="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
+          : `<div class="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl font-black text-white shadow-xl transition-all duration-150">${name ? name.charAt(0).toUpperCase() : '?'}</div>`;
       }
     }
 
@@ -1300,11 +1294,11 @@
 
       statusText.textContent = text;
       if (status === 'connected') {
-        dot.className = 'w-3 h-3 rounded-full bg-blue-500 animate-pulse';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-blue-500 animate-pulse';
       } else if (status === 'connecting') {
-        dot.className = 'w-3 h-3 rounded-full bg-amber-500 animate-pulse';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-amber-500 animate-pulse';
       } else {
-        dot.className = 'w-3 h-3 rounded-full bg-rose-500';
+        dot.className = 'w-3.5 h-3.5 rounded-full bg-rose-500';
       }
     }
 
@@ -1315,7 +1309,6 @@
 
     function toggleMic() {
       isMicMuted = !isMicMuted;
-      
       playAudioTone(isMicMuted ? 'mute' : 'unmute');
 
       if (localStream) {
@@ -1331,7 +1324,6 @@
 
     function toggleDeafen() {
       isDeafened = !isDeafened;
-      
       playAudioTone(isDeafened ? 'deafen' : 'undeafen');
 
       if (isDeafened) {
@@ -1375,7 +1367,7 @@
 
       if (isDeafened) {
         btn.innerHTML = '<i class="fa-solid fa-headphones-simple text-rose-500"></i>';
-        localDeafenIcon.classList.remove('hidden');
+        localDeafenIcon.classList.add('hidden');
       } else {
         btn.innerHTML = '<i class="fa-solid fa-headphones"></i>';
         localDeafenIcon.classList.add('hidden');
