@@ -410,6 +410,7 @@
     let screenStream = null;
     let currentRoomCode = null;
     let activeConnections = {};
+    let mediaCalls = {};
     let remoteProfiles = {};
     let pendingGuestsList = [];
     let targetHostPeerId = null;
@@ -480,7 +481,6 @@
       } catch(e) {}
     }
 
-    // DETECTOR DE VOZ (VAD) CORRIGIDO
     function setupLocalAudioDetection() {
       if (!localStream || localStream.getAudioTracks().length === 0) return;
       try {
@@ -836,7 +836,6 @@
             cancelJoinRequest();
           }
         } else if (data.type === 'connect-to-peer') {
-          // CONECTAR AOS OUTROS PARTICIPANTES DA SALA
           connectToPeerDirectly(data.peerId);
         } else {
           handleDataMessage(data, targetHostPeerId, peer);
@@ -920,7 +919,8 @@
       if (item) {
         const { conn, data } = item;
 
-        // Avisa a todos os já presentes para conectarem ao novo participante
+        conn.send({ type: 'entry-response', approved: true });
+
         Object.keys(activeConnections).forEach(existingPeerId => {
           if (existingPeerId !== data.peerId && activeConnections[existingPeerId].open) {
             activeConnections[existingPeerId].send({ type: 'connect-to-peer', peerId: data.peerId });
@@ -930,8 +930,6 @@
 
         activeConnections[data.peerId] = conn;
         remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted, isDeafened: data.isDeafened };
-
-        conn.send({ type: 'entry-response', approved: true });
 
         const call = peer.call(data.peerId, localStream);
         if (call) handleIncomingStream(call);
@@ -1004,6 +1002,7 @@
     }
 
     function handleIncomingStream(call) {
+      mediaCalls[call.peer] = call;
       call.on('stream', (remoteStream) => {
         addRemoteVideo(call.peer, remoteStream);
         setupRemoteAudioDetection(call.peer, remoteStream);
@@ -1016,45 +1015,50 @@
     }
 
     function addRemoteVideo(peerId, stream) {
-      if (document.getElementById(`video-container-${peerId}`)) return;
+      let container = document.getElementById(`video-container-${peerId}`);
+      
+      if (!container) {
+        const grid = document.getElementById('video-grid');
+        container = document.createElement('div');
+        container.id = `video-container-${peerId}`;
+        container.className = 'relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl transition-all duration-150';
 
-      const grid = document.getElementById('video-grid');
-      const container = document.createElement('div');
-      container.id = `video-container-${peerId}`;
-      container.className = 'relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl transition-all duration-150';
+        const video = document.createElement('video');
+        video.id = `remote-video-el-${peerId}`;
+        video.autoplay = true;
+        video.playsinline = true;
+        video.srcObject = stream;
+        video.muted = isDeafened;
+        video.className = 'w-full h-full object-cover';
 
-      const video = document.createElement('video');
-      video.id = `remote-video-el-${peerId}`;
-      video.autoplay = true;
-      video.playsinline = true;
-      video.srcObject = stream;
-      video.muted = isDeafened;
-      video.className = 'w-full h-full object-cover';
+        const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false, isDeafened: false };
 
-      const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false, isDeafened: false };
+        const avatarDiv = document.createElement('div');
+        avatarDiv.id = `remote-avatar-${peerId}`;
+        const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+        avatarDiv.className = `absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3 ${hasVideo ? 'hidden' : ''}`;
+        avatarDiv.innerHTML = profile.avatar 
+          ? `<img src="${profile.avatar}" class="w-28 h-28 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
+          : `<div class="w-28 h-28 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-4xl font-bold text-white shadow-xl transition-all duration-150">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
 
-      const avatarDiv = document.createElement('div');
-      avatarDiv.id = `remote-avatar-${peerId}`;
-      const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
-      avatarDiv.className = `absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3 ${hasVideo ? 'hidden' : ''}`;
-      avatarDiv.innerHTML = profile.avatar 
-        ? `<img src="${profile.avatar}" class="w-28 h-28 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
-        : `<div class="w-28 h-28 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-4xl font-bold text-white shadow-xl transition-all duration-150">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
+        const label = document.createElement('div');
+        label.className = 'absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg';
+        label.innerHTML = `
+          <span id="remote-deafen-icon-${peerId}" class="text-rose-400 ${profile.isDeafened ? '' : 'hidden'}" title="Full Mutado"><i class="fa-solid fa-headphones-simple text-xs"></i></span>
+          <span id="remote-mic-icon-${peerId}" class="text-rose-400 ${profile.isMuted ? '' : 'hidden'}" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
+          <span id="remote-name-${peerId}">${profile.name}</span>
+        `;
 
-      const label = document.createElement('div');
-      label.className = 'absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-slate-800 flex items-center space-x-2 shadow-lg';
-      label.innerHTML = `
-        <span id="remote-deafen-icon-${peerId}" class="text-rose-400 ${profile.isDeafened ? '' : 'hidden'}" title="Full Mutado"><i class="fa-solid fa-headphones-simple text-xs"></i></span>
-        <span id="remote-mic-icon-${peerId}" class="text-rose-400 ${profile.isMuted ? '' : 'hidden'}" title="Microfone Mutado"><i class="fa-solid fa-microphone-slash"></i></span>
-        <span id="remote-name-${peerId}">${profile.name}</span>
-      `;
+        container.appendChild(video);
+        container.appendChild(avatarDiv);
+        container.appendChild(label);
+        grid.appendChild(container);
 
-      container.appendChild(video);
-      container.appendChild(avatarDiv);
-      container.appendChild(label);
-      grid.appendChild(container);
-
-      updateParticipantCount();
+        updateParticipantCount();
+      } else {
+        const video = document.getElementById(`remote-video-el-${peerId}`);
+        if (video) video.srcObject = stream;
+      }
     }
 
     function updateRemoteTileMetadata(peerId, name, avatar, isMuted, isDeafened) {
@@ -1191,32 +1195,66 @@
       }
     }
 
+    // CORREÇÃO DO COMPARTILHAMENTO DE TELA P2P
     async function toggleScreenShare() {
       if (!isSharingScreen) {
         try {
           screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
           playAudioTone('screen_start');
-          const screenTrack = screenStream.getVideoTracks()[0];
+          const screenVideoTrack = screenStream.getVideoTracks()[0];
+
+          // Troca a faixa no elemento local
           document.getElementById('local-video').srcObject = screenStream;
-          isSharingScreen = true;
           document.getElementById('local-avatar-placeholder').classList.add('hidden');
-          screenTrack.onended = () => { stopScreenShare(); };
-        } catch (err) { console.error(err); }
+          isSharingScreen = true;
+
+          // Substitui a faixa de vídeo enviada para todos os outros membros
+          Object.values(mediaCalls).forEach(call => {
+            if (call && call.peerConnection) {
+              const senders = call.peerConnection.getSenders();
+              const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+              if (videoSender) {
+                videoSender.replaceTrack(screenVideoTrack);
+              }
+            }
+          });
+
+          screenVideoTrack.onended = () => { stopScreenShare(); };
+        } catch (err) { console.error('Erro ao compartilhar tela:', err); }
       } else { 
         stopScreenShare(); 
       }
     }
 
     function stopScreenShare() {
-      if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+      if (screenStream) {
+        screenStream.getTracks().forEach(t => t.stop());
+        screenStream = null;
+      }
       playAudioTone('screen_stop');
+
       document.getElementById('local-video').srcObject = localStream;
       isSharingScreen = false;
       document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
+
+      // Restaura a câmera original para todos os participantes
+      const cameraVideoTrack = localStream.getVideoTracks()[0];
+      if (cameraVideoTrack) {
+        Object.values(mediaCalls).forEach(call => {
+          if (call && call.peerConnection) {
+            const senders = call.peerConnection.getSenders();
+            const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+            if (videoSender) {
+              videoSender.replaceTrack(cameraVideoTrack);
+            }
+          }
+        });
+      }
     }
 
     function leaveCall() {
       if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (screenStream) screenStream.getTracks().forEach(t => t.stop());
       if (peer) peer.destroy();
 
       document.getElementById('step-call').classList.add('hidden');
