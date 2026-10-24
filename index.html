@@ -1333,10 +1333,15 @@
         video.className = 'w-full h-full object-contain bg-black';
 
         const label = document.createElement('div');
-        label.className = 'absolute bottom-4 left-4 bg-blue-600/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-white z-10 border border-blue-400 flex items-center space-x-2 shadow-lg';
+        label.className = 'absolute bottom-4 left-4 right-4 sm:right-auto bg-blue-600/90 backdrop-blur-md px-4 py-2.5 rounded-xl text-xs font-bold text-white z-10 border border-blue-400 flex items-center justify-between space-x-4 shadow-lg';
         label.innerHTML = `
-          <i class="fa-solid fa-desktop text-sm"></i>
-          <span>Tela de ${ownerName}</span>
+          <div class="flex items-center space-x-2 truncate mr-2">
+            <i class="fa-solid fa-desktop text-sm shrink-0"></i>
+            <span class="truncate">Tela de ${ownerName}</span>
+          </div>
+          <button onclick="toggleScreenFullscreen('${peerId}')" class="p-2 bg-blue-700 hover:bg-blue-800 rounded-lg text-white transition shrink-0 btn-press" title="Tela Cheia">
+            <i class="fa-solid fa-expand text-xs" id="screen-fs-icon-${peerId}"></i>
+          </button>
         `;
 
         container.appendChild(video);
@@ -1345,6 +1350,30 @@
         updateParticipantCount();
       }
     }
+
+    function toggleScreenFullscreen(peerId) {
+      const container = document.getElementById(`screen-container-${peerId}`);
+      const icon = document.getElementById(`screen-fs-icon-${peerId}`);
+      if (!container) return;
+
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => {
+          showToast("Erro ao entrar em tela cheia: " + err.message, "error");
+        });
+        if (icon) icon.className = "fa-solid fa-compress text-xs";
+      } else {
+        document.exitFullscreen();
+        if (icon) icon.className = "fa-solid fa-expand text-xs";
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        document.querySelectorAll('[id^="screen-fs-icon-"]').forEach(icon => {
+          icon.className = "fa-solid fa-expand text-xs";
+        });
+      }
+    });
 
     function removeScreenTile(peerId) {
       const container = document.getElementById(`screen-container-${peerId}`);
@@ -1568,7 +1597,6 @@
           document.getElementById('local-avatar-placeholder').classList.add('hidden');
           isSharingScreen = true;
 
-          // Inicia chamadas dedicadas de tela para cada peer conectado
           Object.keys(activeConnections).forEach(peerId => {
             if (peer && peer.open) {
               const screenCall = peer.call(peerId, screenStream, { metadata: { type: 'screen', owner: currentUser.peerId } });
