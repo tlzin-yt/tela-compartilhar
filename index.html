@@ -240,34 +240,38 @@
     </div>
   </div>
 
-  <!-- ETAPA 3: ENTRAR OU CRIAR SALA -->
+  <!-- ETAPA 3: CRIAR OU ENTRAR EM SALA (NOVA INTERFACE) -->
   <div id="step-room" class="hidden w-full max-w-md px-4">
     <div class="bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl space-y-6 text-slate-100">
       <div class="text-center space-y-1.5">
         <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg shadow-blue-600/40 mb-1">
           <i class="fa-solid fa-video"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white tracking-tight">Entrar na Chamada</h2>
-        <p class="text-xs text-slate-400">Crie uma nova sala ou digite o código do anfitrião.</p>
+        <h2 class="text-2xl font-bold text-white tracking-tight">Suas Chamadas</h2>
+        <p class="text-xs text-slate-400">Crie uma nova sala instantânea ou entre com um código.</p>
       </div>
 
       <div class="space-y-4">
-        <div>
-          <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Código da Sala</label>
-          <div class="relative flex items-center">
-            <span class="absolute left-4 text-slate-500"><i class="fa-solid fa-hashtag"></i></span>
-            <input type="text" id="room-code-input" placeholder="Ex: sala-12345" class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition font-semibold tracking-wide">
-          </div>
+        <!-- BOTÃO PRINCIPAL CRIAR CALL -->
+        <button onclick="createNewCall()" class="btn-press w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2.5">
+          <i class="fa-solid fa-plus-circle text-lg"></i>
+          <span>Criar Call</span>
+        </button>
+
+        <div class="flex items-center my-3">
+          <div class="flex-1 border-t border-slate-800"></div>
+          <span class="px-3 text-[11px] text-slate-500 font-semibold uppercase tracking-wider">ou entrar com código</span>
+          <div class="flex-1 border-t border-slate-800"></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <button onclick="generateRandomRoomCode()" class="btn-press py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-2xl border border-slate-700 transition flex items-center justify-center space-x-2">
-            <i class="fa-solid fa-dice text-slate-400"></i>
-            <span>Gerar Código</span>
-          </button>
-          <button onclick="startOrJoinCall()" class="btn-press py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-2xl transition shadow-md shadow-blue-600/30 flex items-center justify-center space-x-2">
-            <i class="fa-solid fa-phone"></i>
-            <span>Entrar na Call</span>
+        <div class="space-y-3">
+          <div class="relative flex items-center">
+            <span class="absolute left-4 text-slate-500"><i class="fa-solid fa-hashtag"></i></span>
+            <input type="text" id="room-code-input" placeholder="Cole o código da sala..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition font-semibold tracking-wide">
+          </div>
+          <button onclick="joinExistingCall()" class="btn-press w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-2xl border border-slate-700 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Entrar na Sala</span>
           </button>
         </div>
       </div>
@@ -590,12 +594,6 @@
       document.getElementById('step-auth').classList.add('hidden');
       document.getElementById('btn-header-logout').classList.remove('hidden');
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const roomParam = urlParams.get('sala');
-      if (roomParam) {
-        document.getElementById('room-code-input').value = roomParam;
-      }
-
       showStepProfile();
     };
 
@@ -673,7 +671,16 @@
       saveUserData();
 
       document.getElementById('step-profile').classList.add('hidden');
-      document.getElementById('step-room').classList.remove('hidden');
+
+      // Verifica se há link de sala na URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('sala');
+      if (roomParam) {
+        currentRoomCode = roomParam;
+        checkAndStartCall();
+      } else {
+        document.getElementById('step-room').classList.remove('hidden');
+      }
     }
 
     function saveUserData() {
@@ -681,17 +688,49 @@
       updateLocalTileUI();
     }
 
-    function generateRandomRoomCode() {
-      const code = 'sala-' + Math.random().toString(36).substring(2, 8);
-      document.getElementById('room-code-input').value = code;
-    }
-
-    async function startOrJoinCall() {
-      ensureAudioContext();
-      const roomCode = document.getElementById('room-code-input').value.trim();
-      if (!roomCode) { alert('Informe o código da sala ou clique em "Gerar Código".'); return; }
+    // BOTÃO NOVO: CRIAR CALL (GERA CÓDIGO ÚNICO)
+    function createNewCall() {
+      const roomCode = 'call-' + Math.random().toString(36).substring(2, 8);
+      
+      // Salva na lista de salas criadas por este usuário/dispositivo para garantir reentrada como host
+      let hostedRooms = JSON.parse(localStorage.getItem('omnicall_hosted_rooms') || '[]');
+      if (!hostedRooms.includes(roomCode)) {
+        hostedRooms.push(roomCode);
+        localStorage.setItem('omnicall_hosted_rooms', JSON.stringify(hostedRooms));
+      }
 
       currentRoomCode = roomCode;
+      // Atualiza a URL sem recarregar a página para facilitar compartilhamento
+      window.history.pushState({}, '', `?sala=${roomCode}`);
+      startCallProcess(true); // true = entra direto como anfitrião
+    }
+
+    // ENTRAR COM CÓDIGO DIGITADO
+    function joinExistingCall() {
+      const roomCode = document.getElementById('room-code-input').value.trim();
+      if (!roomCode) { alert('Informe ou cole o código da sala.'); return; }
+      currentRoomCode = roomCode;
+      window.history.pushState({}, '', `?sala=${roomCode}`);
+      checkAndStartCall();
+    }
+
+    function checkAndStartCall() {
+      let hostedRooms = JSON.parse(localStorage.getItem('omnicall_hosted_rooms') || '[]');
+      const isMyRoom = hostedRooms.includes(currentRoomCode);
+
+      if (isMyRoom) {
+        // Se for o anfitrião voltando, entra direto sem pedir permissão
+        startCallProcess(true);
+      } else {
+        // Se for convidado, vai para a tela de pré-entrada
+        document.getElementById('step-room').classList.add('hidden');
+        document.getElementById('step-prejoin').classList.remove('hidden');
+      }
+    }
+
+    async function startCallProcess(forceHost = false) {
+      ensureAudioContext();
+      if (!currentRoomCode) return;
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ 
@@ -715,7 +754,7 @@
 
       updateLocalTileUI();
       setupLocalAudioDetection();
-      initPeerMesh();
+      initPeerMesh(forceHost);
     }
 
     function updateLocalTileUI() {
@@ -733,50 +772,81 @@
       }
     }
 
-    function initPeerMesh() {
+    function initPeerMesh(forceHost = false) {
       const myUniqueId = `omnicall-${currentRoomCode}-${Math.random().toString(36).substring(2, 8)}`;
       const preciseHostId = `omnicall-room-${currentRoomCode}-master`;
 
       peer = new Peer(peerConfig);
 
       peer.on('open', () => {
-        const hostPeer = new Peer(preciseHostId, peerConfig);
+        if (forceHost) {
+          // FLUXO DO ANFITRIÃO (Criação ou Reentrada Instantânea)
+          const hostPeer = new Peer(preciseHostId, peerConfig);
 
-        hostPeer.on('open', (hId) => {
-          currentUser.peerId = hId;
-          isHost = true;
-          
-          document.getElementById('step-room').classList.add('hidden');
-          document.getElementById('step-call').classList.remove('hidden');
-          document.getElementById('host-guests-wrapper').classList.remove('hidden');
-          document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
-          updateConnectionStatus('connected', 'Você é o anfitrião');
+          hostPeer.on('open', (hId) => {
+            setupHostSuccess(hostPeer, hId);
+          });
 
-          showMeetInviteCard();
+          hostPeer.on('error', (err) => {
+            if (err.type === 'unavailable-id') {
+              // Se o ID ainda estiver travado da sessão anterior, tenta novamente em 1 segundo
+              setTimeout(() => {
+                hostPeer.destroy();
+                initPeerMesh(true);
+              }, 1000);
+            } else {
+              setupHostSuccess(hostPeer, preciseHostId);
+            }
+          });
+        } else {
+          // FLUXO DO CONVIDADO (Verifica se o anfitrião está online)
+          const testHostPeer = new Peer(preciseHostId, peerConfig);
 
-          setupPeerEvents(hostPeer);
-          peer.destroy();
-          peer = hostPeer;
-        });
-
-        hostPeer.on('error', (err) => {
-          if (err.type === 'unavailable-id') {
-            isHost = false;
-            targetHostPeerId = preciseHostId;
-            const guestPeer = new Peer(myUniqueId, peerConfig);
-            guestPeer.on('open', (gId) => {
-              currentUser.peerId = gId;
-              
-              document.getElementById('step-room').classList.add('hidden');
-              document.getElementById('step-prejoin').classList.remove('hidden');
-
-              setupPeerEvents(guestPeer);
-            });
+          testHostPeer.on('open', (hId) => {
+            testHostPeer.destroy();
             peer.destroy();
-            peer = guestPeer;
-          }
-        });
+            alert('O anfitrião ainda não entrou nesta sala ou a call está encerrada.');
+            leaveCall();
+          });
+
+          testHostPeer.on('error', (err) => {
+            if (err.type === 'unavailable-id') {
+              testHostPeer.destroy();
+              const guestPeer = new Peer(myUniqueId, peerConfig);
+              guestPeer.on('open', (gId) => {
+                currentUser.peerId = gId;
+                targetHostPeerId = preciseHostId;
+                
+                document.getElementById('step-room').classList.add('hidden');
+                document.getElementById('step-prejoin').classList.remove('hidden');
+
+                setupPeerEvents(guestPeer);
+              });
+              peer.destroy();
+              peer = guestPeer;
+            }
+          });
+        }
       });
+    }
+
+    function setupHostSuccess(hPeer, hId) {
+      currentUser.peerId = hId;
+      isHost = true;
+      
+      document.getElementById('step-room').classList.add('hidden');
+      document.getElementById('step-prejoin').classList.add('hidden');
+      document.getElementById('step-waiting').classList.add('hidden');
+      document.getElementById('step-call').classList.remove('hidden');
+      document.getElementById('host-guests-wrapper').classList.remove('hidden');
+      document.getElementById('current-room-title').textContent = 'Sala: ' + currentRoomCode;
+      updateConnectionStatus('connected', 'Você é o anfitrião');
+
+      showMeetInviteCard();
+
+      setupPeerEvents(hPeer);
+      if (peer && peer !== hPeer) peer.destroy();
+      peer = hPeer;
     }
 
     function showMeetInviteCard() {
@@ -1195,7 +1265,6 @@
       }
     }
 
-    // CORREÇÃO DO COMPARTILHAMENTO DE TELA P2P
     async function toggleScreenShare() {
       if (!isSharingScreen) {
         try {
@@ -1203,12 +1272,10 @@
           playAudioTone('screen_start');
           const screenVideoTrack = screenStream.getVideoTracks()[0];
 
-          // Troca a faixa no elemento local
           document.getElementById('local-video').srcObject = screenStream;
           document.getElementById('local-avatar-placeholder').classList.add('hidden');
           isSharingScreen = true;
 
-          // Substitui a faixa de vídeo enviada para todos os outros membros
           Object.values(mediaCalls).forEach(call => {
             if (call && call.peerConnection) {
               const senders = call.peerConnection.getSenders();
@@ -1237,7 +1304,6 @@
       isSharingScreen = false;
       document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
 
-      // Restaura a câmera original para todos os participantes
       const cameraVideoTrack = localStream.getVideoTracks()[0];
       if (cameraVideoTrack) {
         Object.values(mediaCalls).forEach(call => {
@@ -1256,6 +1322,9 @@
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (screenStream) screenStream.getTracks().forEach(t => t.stop());
       if (peer) peer.destroy();
+
+      // Limpa o parâmetro da URL ao sair
+      window.history.pushState({}, '', window.location.pathname);
 
       document.getElementById('step-call').classList.add('hidden');
       document.getElementById('meet-invite-card').classList.add('hidden');
