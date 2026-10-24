@@ -895,7 +895,6 @@
       initPeerMesh(forceHost);
     }
 
-    // NOVA FUNÇÃO: Obtém microfone/câmara do convidado antes de pedir entrada
     async function startGuestJoinFlow() {
       ensureAudioContext();
       if (!currentRoomCode) return;
@@ -1262,26 +1261,22 @@
       });
     }
 
+    // CORRIGIDO: Captura o stream inicial e escuta novas tracks dinâmicas (ex: compartilhamento de tela ou câmara)
     function handleIncomingStream(call) {
       mediaCalls[call.peer] = call;
       ensureRemoteTileExists(call.peer);
 
       call.on('stream', (remoteStream) => {
-        const video = document.getElementById(`remote-video-el-${call.peer}`);
-        if (video) {
-          video.srcObject = remoteStream;
-          video.play().catch(e => console.log("Autoplay restrito pelo navegador:", e));
-        }
-        
-        const avatarDiv = document.getElementById(`remote-avatar-${call.peer}`);
-        if (avatarDiv) {
-          const hasVideo = remoteStream.getVideoTracks().length > 0 && remoteStream.getVideoTracks()[0].enabled;
-          avatarDiv.classList.toggle('hidden', hasVideo);
-        }
-
-        setupRemoteAudioDetection(call.peer, remoteStream);
-        updateConnectionStatus('connected', 'Conectado!');
+        bindStreamToVideo(call.peer, remoteStream);
       });
+
+      // NOVO: Monitora faixas de vídeo/áudio adicionadas dinamicamente após a conexão inicial
+      if (call.peerConnection) {
+        call.peerConnection.ontrack = (event) => {
+          const remoteStream = event.streams[0] || new MediaStream([event.track]);
+          bindStreamToVideo(call.peer, remoteStream);
+        };
+      }
 
       call.on('close', () => {
         removeRemoteVideo(call.peer);
@@ -1289,6 +1284,23 @@
       call.on('error', () => {
         removeRemoteVideo(call.peer);
       });
+    }
+
+    function bindStreamToVideo(peerId, remoteStream) {
+      const video = document.getElementById(`remote-video-el-${peerId}`);
+      if (video) {
+        video.srcObject = remoteStream;
+        video.play().catch(e => console.log("Autoplay restrito pelo navegador:", e));
+      }
+      
+      const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
+      if (avatarDiv) {
+        const hasVideo = remoteStream.getVideoTracks().length > 0 && remoteStream.getVideoTracks()[0].enabled;
+        avatarDiv.classList.toggle('hidden', hasVideo);
+      }
+
+      setupRemoteAudioDetection(peerId, remoteStream);
+      updateConnectionStatus('connected', 'Conectado!');
     }
 
     function ensureRemoteTileExists(peerId) {
