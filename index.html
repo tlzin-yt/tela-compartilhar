@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>OmniCall - Chamadas Direct</title>
+  <title>OmniCall - Direct Call</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -124,47 +124,53 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     
     .glass-card {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(226, 232, 240, 0.8);
     }
+
+    .btn-press {
+      transition: transform 0.1s ease, background-color 0.2s ease;
+    }
+    .btn-press:active {
+      transform: scale(0.90) !important;
+    }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-slate-100 to-emerald-50/30 text-slate-800 h-screen overflow-hidden flex flex-col justify-center items-center select-none">
+<body class="bg-gradient-to-br from-slate-100 via-slate-200 to-emerald-50/40 text-slate-800 h-screen overflow-hidden flex flex-col justify-center items-center select-none">
 
-  <!-- CABEÇALHO SUPERIOR FIXO -->
-  <header class="w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-6 py-3.5 flex items-center justify-between absolute top-0 left-0 z-20 shadow-xs">
+  <!-- CABEÇALHO FIXO -->
+  <header class="w-full bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-3.5 flex items-center justify-between absolute top-0 left-0 z-20 shadow-xs">
     <div class="flex items-center space-x-2.5">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
-        <i class="fa-solid fa-bolt text-sm"></i>
+      <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-500/20">
+        <i class="fa-solid fa-phone"></i>
       </div>
       <div>
         <span class="font-bold text-slate-900 text-base tracking-tight block leading-tight">OmniCall</span>
-        <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">Direct Video</span>
+        <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">P2P Calls</span>
       </div>
     </div>
-    <button id="btn-header-logout" onclick="window.logoutUser()" class="hidden px-3.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-100 active:scale-95">
+    <button id="btn-header-logout" onclick="window.logoutUser()" class="hidden btn-press px-3.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-100">
       <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Sair
     </button>
   </header>
 
   <!-- ETAPA 1: LOGIN -->
   <div id="step-auth" class="w-full max-w-md px-4">
-    <div class="glass-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 space-y-6">
+    <div class="glass-card p-8 rounded-3xl shadow-xl space-y-6">
       <div class="text-center space-y-2">
-        <div class="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-teal-400 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg shadow-emerald-500/30">
+        <div class="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg shadow-emerald-500/30">
           <i class="fa-solid fa-video"></i>
         </div>
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Bem-vindo ao OmniCall</h2>
-        <p class="text-xs text-slate-500">Conecte-se com alta qualidade e sem complicações.</p>
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Entrar no OmniCall</h2>
+        <p class="text-xs text-slate-500">Acesse sua conta para criar ou entrar numa chamada.</p>
       </div>
 
-      <button onclick="window.signInWithGoogle()" class="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-2xl text-sm transition border border-slate-200 flex items-center justify-center space-x-3 shadow-xs active:scale-[0.98]">
+      <button onclick="window.signInWithGoogle()" class="btn-press w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-2xl text-sm transition border border-slate-200 flex items-center justify-center space-x-3 shadow-xs">
         <i class="fa-brands fa-google text-lg text-rose-500"></i>
-        <span>Continuar com a Conta Google</span>
+        <span>Entrar com a Conta Google</span>
       </button>
 
       <div class="flex items-center my-4">
@@ -184,8 +190,8 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2.5 pt-2">
-          <button type="button" onclick="handleRegister()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition active:scale-[0.98]">Criar Conta</button>
-          <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-xs transition shadow-md shadow-emerald-500/25 active:scale-[0.98]">Entrar</button>
+          <button type="button" onclick="handleRegister()" class="btn-press w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition">Criar Conta</button>
+          <button type="submit" class="btn-press w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-xs transition shadow-md shadow-emerald-500/25">Entrar</button>
         </div>
       </form>
     </div>
@@ -193,23 +199,23 @@
 
   <!-- ETAPA 2: ESCOLHER PERFIL -->
   <div id="step-profile" class="hidden w-full max-w-md px-4">
-    <div class="glass-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 space-y-6">
+    <div class="glass-card p-8 rounded-3xl shadow-xl space-y-6">
       <div class="text-center space-y-1">
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Seu Perfil</h2>
-        <p class="text-xs text-slate-500">Personalize sua foto e nome para a chamada.</p>
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Configure seu Perfil</h2>
+        <p class="text-xs text-slate-500">Sua foto e nome que aparecerão na sala de vídeo.</p>
       </div>
 
       <div class="flex flex-col items-center space-y-3.5">
-        <div class="relative group">
+        <div class="relative">
           <div class="w-28 h-28 rounded-full p-1 bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-lg shadow-emerald-500/20">
             <img id="profile-preview-img" src="" class="w-full h-full rounded-full object-cover bg-white hidden">
             <div id="profile-preview-fallback" class="w-full h-full rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 text-4xl">?</div>
           </div>
         </div>
 
-        <label class="cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center space-x-2 shadow-xs active:scale-95">
+        <label class="btn-press cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition flex items-center space-x-2 shadow-xs">
           <i class="fa-solid fa-camera text-emerald-600"></i>
-          <span>Alterar Foto da Galeria</span>
+          <span>Escolher Foto da Galeria</span>
           <input type="file" id="file-input-gallery" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
         </label>
       </div>
@@ -219,20 +225,20 @@
         <input type="text" id="profile-name-input" placeholder="Como quer ser chamado..." class="w-full bg-slate-50/80 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white transition font-medium">
       </div>
 
-      <button onclick="confirmProfile()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-emerald-500/25 active:scale-[0.98]">
-        Continuar para a Sala <i class="fa-solid fa-arrow-right ml-1.5"></i>
+      <button onclick="confirmProfile()" class="btn-press w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-emerald-500/25">
+        Avançar para a Sala <i class="fa-solid fa-arrow-right ml-1.5"></i>
       </button>
     </div>
   </div>
 
-  <!-- ETAPA 3: SALA / ANFITRIÃO OU LINK -->
+  <!-- ETAPA 3: ENTRAR OU CRIAR SALA -->
   <div id="step-room" class="hidden w-full max-w-md px-4">
-    <div class="glass-card p-8 rounded-3xl shadow-xl shadow-slate-200/50 space-y-6">
+    <div class="glass-card p-8 rounded-3xl shadow-xl space-y-6">
       <div class="text-center space-y-1.5">
-        <div class="w-14 h-14 bg-gradient-to-tr from-emerald-500 to-teal-400 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg shadow-emerald-500/30 mb-1">
+        <div class="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg shadow-emerald-500/30 mb-1">
           <i class="fa-solid fa-video"></i>
         </div>
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Sala de Chamada</h2>
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Entrar na Chamada</h2>
         <p class="text-xs text-slate-500">Crie uma nova sala ou digite o código do anfitrião.</p>
       </div>
 
@@ -246,11 +252,11 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3 pt-2">
-          <button onclick="generateRandomRoomCode()" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-2xl border border-slate-200 transition flex items-center justify-center space-x-2 active:scale-95">
+          <button onclick="generateRandomRoomCode()" class="btn-press py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-2xl border border-slate-200 transition flex items-center justify-center space-x-2">
             <i class="fa-solid fa-dice text-slate-500"></i>
             <span>Gerar Código</span>
           </button>
-          <button onclick="startOrJoinCall()" class="py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-2xl transition shadow-md shadow-emerald-500/25 flex items-center justify-center space-x-2 active:scale-95">
+          <button onclick="startOrJoinCall()" class="btn-press py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-2xl transition shadow-md shadow-emerald-500/25 flex items-center justify-center space-x-2">
             <i class="fa-solid fa-phone"></i>
             <span>Entrar na Call</span>
           </button>
@@ -270,7 +276,7 @@
           <p class="text-[11px] text-slate-400"><span id="connection-status-text">Conectando...</span> • <span id="participant-count">1</span> pessoa(s)</p>
         </div>
       </div>
-      <button onclick="copyInviteLink()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-2 border border-slate-700/60 active:scale-95">
+      <button onclick="copyInviteLink()" class="btn-press px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition flex items-center space-x-2 border border-slate-700/60">
         <i class="fa-solid fa-link text-emerald-400"></i>
         <span>Copiar Link do Anfitrião</span>
       </button>
@@ -291,18 +297,18 @@
       </div>
     </div>
 
-    <!-- Barra de Controles da Call com Animação de Press -->
+    <!-- Barra de Controles da Call com Animações de Press -->
     <div class="bg-slate-900/90 backdrop-blur-md border-t border-slate-800 py-4 px-6 flex items-center justify-center space-x-4">
-      <button id="btn-toggle-mic" onclick="toggleMic()" class="w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md active:scale-90 duration-150" title="Microfone">
+      <button id="btn-toggle-mic" onclick="toggleMic()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md" title="Microfone">
         <i class="fa-solid fa-microphone"></i>
       </button>
-      <button id="btn-toggle-cam" onclick="toggleCam()" class="w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md active:scale-90 duration-150" title="Câmera">
+      <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md" title="Câmera">
         <i class="fa-solid fa-video"></i>
       </button>
-      <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-13 h-13 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition text-lg shadow-md active:scale-90 duration-150" title="Compartilhar Tela">
+      <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="btn-press w-13 h-13 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition text-lg shadow-md" title="Compartilhar Tela">
         <i class="fa-solid fa-desktop"></i>
       </button>
-      <button onclick="leaveCall()" class="w-13 h-13 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-lg shadow-lg shadow-rose-600/30 active:scale-90 duration-150" title="Sair da Chamada">
+      <button onclick="leaveCall()" class="btn-press w-13 h-13 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-lg shadow-lg shadow-rose-600/30" title="Sair da Chamada">
         <i class="fa-solid fa-phone-slash"></i>
       </button>
     </div>
@@ -331,7 +337,7 @@
       }
     };
 
-    // Sintetizador de áudio para o som de Mute / Unmute (Estilo Discord)
+    // Sintetizador de áudio estilo Discord
     function playMuteSound(muted) {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -340,11 +346,9 @@
         
         osc.type = 'sine';
         if (muted) {
-          // Som de Mute (Tom mais grave descendente)
           osc.frequency.setValueAtTime(440, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.08);
         } else {
-          // Som de Unmute (Tom mais agudo ascendente)
           osc.frequency.setValueAtTime(220, audioCtx.currentTime);
           osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
         }
@@ -357,9 +361,7 @@
 
         osc.start();
         osc.stop(audioCtx.currentTime + 0.08);
-      } catch(e) {
-        console.warn('AudioContext bloqueado ou não suportado', e);
-      }
+      } catch(e) {}
     }
 
     window.handleAuthSuccess = function(userData) {
@@ -727,7 +729,6 @@
         audioTrack.enabled = !audioTrack.enabled;
         isMicMuted = !audioTrack.enabled;
         
-        // Toca o som de mute / unmute
         playMuteSound(isMicMuted);
 
         const btn = document.getElementById('btn-toggle-mic');
