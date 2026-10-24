@@ -337,10 +337,15 @@
       }
     };
 
-    // Sintetizador de áudio estilo Discord
+    // Sintetizador de áudio estilo Discord robusto
     function playMuteSound(muted) {
       try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         
@@ -361,7 +366,9 @@
 
         osc.start();
         osc.stop(audioCtx.currentTime + 0.08);
-      } catch(e) {}
+      } catch(e) {
+        console.warn('Erro ao tocar som:', e);
+      }
     }
 
     window.handleAuthSuccess = function(userData) {
@@ -723,27 +730,30 @@
     }
 
     function toggleMic() {
-      if (!localStream) return;
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        isMicMuted = !audioTrack.enabled;
-        
-        playMuteSound(isMicMuted);
+      isMicMuted = !isMicMuted;
+      
+      // Toca o som de mute / unmute garantido
+      playMuteSound(isMicMuted);
 
-        const btn = document.getElementById('btn-toggle-mic');
-        const localMicIcon = document.getElementById('local-mic-icon');
-
-        if (isMicMuted) {
-          btn.innerHTML = '<i class="fa-solid fa-microphone-slash text-rose-500"></i>';
-          localMicIcon.classList.remove('hidden');
-        } else {
-          btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
-          localMicIcon.classList.add('hidden');
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = !isMicMuted;
         }
-
-        broadcastMuteStatus();
       }
+
+      const btn = document.getElementById('btn-toggle-mic');
+      const localMicIcon = document.getElementById('local-mic-icon');
+
+      if (isMicMuted) {
+        btn.innerHTML = '<i class="fa-solid fa-microphone-slash text-rose-500"></i>';
+        localMicIcon.classList.remove('hidden');
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+        localMicIcon.classList.add('hidden');
+      }
+
+      broadcastMuteStatus();
     }
 
     function toggleCam() {
