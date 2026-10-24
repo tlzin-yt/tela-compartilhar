@@ -13,7 +13,7 @@
   <!-- PeerJS CDN -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
-  <!-- Firebase App & Auth SDK (v10) - CORRIGIDO -->
+  <!-- Firebase App & Auth SDK (v10) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { 
@@ -146,7 +146,7 @@
         <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider block">Direct Video</span>
       </div>
     </div>
-    <button id="btn-header-logout" onclick="window.logoutUser()" class="hidden px-3.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-100">
+    <button id="btn-header-logout" onclick="window.logoutUser()" class="hidden px-3.5 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition border border-rose-100 active:scale-95">
       <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Sair
     </button>
   </header>
@@ -162,7 +162,7 @@
         <p class="text-xs text-slate-500">Conecte-se com alta qualidade e sem complicações.</p>
       </div>
 
-      <button onclick="window.signInWithGoogle()" class="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-2xl text-sm transition border border-slate-200 flex items-center justify-center space-x-3 shadow-xs active:scale-[0.99]">
+      <button onclick="window.signInWithGoogle()" class="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-2xl text-sm transition border border-slate-200 flex items-center justify-center space-x-3 shadow-xs active:scale-[0.98]">
         <i class="fa-brands fa-google text-lg text-rose-500"></i>
         <span>Continuar com a Conta Google</span>
       </button>
@@ -184,8 +184,8 @@
         </div>
 
         <div class="grid grid-cols-2 gap-2.5 pt-2">
-          <button type="button" onclick="handleRegister()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition active:scale-[0.99]">Criar Conta</button>
-          <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-xs transition shadow-md shadow-emerald-500/25 active:scale-[0.99]">Entrar</button>
+          <button type="button" onclick="handleRegister()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-2xl text-xs transition active:scale-[0.98]">Criar Conta</button>
+          <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-xs transition shadow-md shadow-emerald-500/25 active:scale-[0.98]">Entrar</button>
         </div>
       </form>
     </div>
@@ -219,7 +219,7 @@
         <input type="text" id="profile-name-input" placeholder="Como quer ser chamado..." class="w-full bg-slate-50/80 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white transition font-medium">
       </div>
 
-      <button onclick="confirmProfile()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-emerald-500/25 active:scale-[0.99]">
+      <button onclick="confirmProfile()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl text-sm transition shadow-lg shadow-emerald-500/25 active:scale-[0.98]">
         Continuar para a Sala <i class="fa-solid fa-arrow-right ml-1.5"></i>
       </button>
     </div>
@@ -284,25 +284,25 @@
           <img id="local-placeholder-img" src="" class="w-28 h-28 rounded-full object-cover border-4 border-emerald-500/80 shadow-xl hidden">
           <div id="local-placeholder-fallback" class="w-28 h-28 rounded-full bg-slate-800 border-4 border-emerald-500/80 flex items-center justify-center text-4xl font-bold text-white shadow-xl">?</div>
         </div>
-        <div class="absolute bottom-4 left-4 bg-slate-900/70 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white z-10 border border-white/10 flex items-center space-x-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <div class="absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-white/10 flex items-center space-x-2 shadow-lg">
+          <span id="local-mic-icon" class="text-rose-400 hidden"><i class="fa-solid fa-microphone-slash"></i></span>
           <span id="local-label-name">Você</span>
         </div>
       </div>
     </div>
 
-    <!-- Barra de Controles da Call -->
+    <!-- Barra de Controles da Call com Animação de Press -->
     <div class="bg-slate-900/90 backdrop-blur-md border-t border-slate-800 py-4 px-6 flex items-center justify-center space-x-4">
-      <button id="btn-toggle-mic" onclick="toggleMic()" class="w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md active:scale-95" title="Microfone">
+      <button id="btn-toggle-mic" onclick="toggleMic()" class="w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md active:scale-90 duration-150" title="Microfone">
         <i class="fa-solid fa-microphone"></i>
       </button>
-      <button id="btn-toggle-cam" onclick="toggleCam()" class="w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md active:scale-95" title="Câmera">
+      <button id="btn-toggle-cam" onclick="toggleCam()" class="w-13 h-13 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-lg shadow-md active:scale-90 duration-150" title="Câmera">
         <i class="fa-solid fa-video"></i>
       </button>
-      <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-13 h-13 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition text-lg shadow-md active:scale-95" title="Compartilhar Tela">
+      <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="w-13 h-13 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition text-lg shadow-md active:scale-90 duration-150" title="Compartilhar Tela">
         <i class="fa-solid fa-desktop"></i>
       </button>
-      <button onclick="leaveCall()" class="w-13 h-13 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-lg shadow-lg shadow-rose-600/30 active:scale-95" title="Sair da Chamada">
+      <button onclick="leaveCall()" class="w-13 h-13 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center transition text-lg shadow-lg shadow-rose-600/30 active:scale-90 duration-150" title="Sair da Chamada">
         <i class="fa-solid fa-phone-slash"></i>
       </button>
     </div>
@@ -330,6 +330,37 @@
         ]
       }
     };
+
+    // Sintetizador de áudio para o som de Mute / Unmute (Estilo Discord)
+    function playMuteSound(muted) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sine';
+        if (muted) {
+          // Som de Mute (Tom mais grave descendente)
+          osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.08);
+        } else {
+          // Som de Unmute (Tom mais agudo ascendente)
+          osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+        }
+
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch(e) {
+        console.warn('AudioContext bloqueado ou não suportado', e);
+      }
+    }
 
     window.handleAuthSuccess = function(userData) {
       currentUser.name = userData.name || '';
@@ -539,7 +570,7 @@
       activeConnections[targetId] = conn;
 
       conn.on('open', () => {
-        conn.send({ type: 'join', peerId: currentUser.peerId, name: currentUser.name, avatar: currentUser.avatar });
+        conn.send({ type: 'join', peerId: currentUser.peerId, name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted });
       });
 
       conn.on('data', (data) => {
@@ -561,7 +592,8 @@
 
     function handleDataMessage(data, peerId, pInstance) {
       if (data.type === 'join') {
-        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar };
+        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false };
+        updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted);
         
         if (!activeConnections[data.peerId]) {
           const call = pInstance.call(data.peerId, localStream);
@@ -570,14 +602,26 @@
           const conn = pInstance.connect(data.peerId);
           activeConnections[data.peerId] = conn;
           conn.on('open', () => {
-            conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar });
+            conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar, isMuted: isMicMuted });
           });
           conn.on('data', (d) => handleDataMessage(d, data.peerId, pInstance));
         }
       } else if (data.type === 'profile') {
-        remoteProfiles[peerId] = { name: data.name, avatar: data.avatar };
-        updateRemoteTileMetadata(peerId, data.name, data.avatar);
+        remoteProfiles[peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false };
+        updateRemoteTileMetadata(peerId, data.name, data.avatar, data.isMuted);
+      } else if (data.type === 'mute-status') {
+        if (!remoteProfiles[peerId]) remoteProfiles[peerId] = {};
+        remoteProfiles[peerId].isMuted = data.isMuted;
+        updateRemoteTileMetadata(peerId, remoteProfiles[peerId].name, remoteProfiles[peerId].avatar, data.isMuted);
       }
+    }
+
+    function broadcastMuteStatus() {
+      Object.values(activeConnections).forEach(conn => {
+        if (conn && conn.open) {
+          conn.send({ type: 'mute-status', isMuted: isMicMuted });
+        }
+      });
     }
 
     function handleIncomingStream(call) {
@@ -605,7 +649,7 @@
       video.srcObject = stream;
       video.className = 'w-full h-full object-cover';
 
-      const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '' };
+      const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false };
 
       const avatarDiv = document.createElement('div');
       avatarDiv.id = `remote-avatar-${peerId}`;
@@ -616,8 +660,11 @@
         : `<div class="w-28 h-28 rounded-full bg-slate-800 border-4 border-emerald-500/80 flex items-center justify-center text-4xl font-bold text-white shadow-xl">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
 
       const label = document.createElement('div');
-      label.className = 'absolute bottom-4 left-4 bg-slate-900/70 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white z-10 border border-white/10 flex items-center space-x-2';
-      label.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span id="remote-name-${peerId}">${profile.name}</span>`;
+      label.className = 'absolute bottom-4 left-4 bg-slate-900/80 backdrop-blur-md px-3.5 py-2 rounded-xl text-xs font-semibold text-white z-10 border border-white/10 flex items-center space-x-2 shadow-lg';
+      label.innerHTML = `
+        <span id="remote-mic-icon-${peerId}" class="text-rose-400 ${profile.isMuted ? '' : 'hidden'}"><i class="fa-solid fa-microphone-slash"></i></span>
+        <span id="remote-name-${peerId}">${profile.name}</span>
+      `;
 
       container.appendChild(video);
       container.appendChild(avatarDiv);
@@ -627,9 +674,15 @@
       updateParticipantCount();
     }
 
-    function updateRemoteTileMetadata(peerId, name, avatar) {
+    function updateRemoteTileMetadata(peerId, name, avatar, isMuted) {
       const nameEl = document.getElementById(`remote-name-${peerId}`);
       if (nameEl) nameEl.textContent = name;
+
+      const micIcon = document.getElementById(`remote-mic-icon-${peerId}`);
+      if (micIcon) {
+        if (isMuted) micIcon.classList.remove('hidden');
+        else micIcon.classList.add('hidden');
+      }
 
       const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
       if (avatarDiv) {
@@ -673,8 +726,22 @@
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         isMicMuted = !audioTrack.enabled;
+        
+        // Toca o som de mute / unmute
+        playMuteSound(isMicMuted);
+
         const btn = document.getElementById('btn-toggle-mic');
-        btn.innerHTML = isMicMuted ? '<i class="fa-solid fa-microphone-slash text-rose-500"></i>' : '<i class="fa-solid fa-microphone"></i>';
+        const localMicIcon = document.getElementById('local-mic-icon');
+
+        if (isMicMuted) {
+          btn.innerHTML = '<i class="fa-solid fa-microphone-slash text-rose-500"></i>';
+          localMicIcon.classList.remove('hidden');
+        } else {
+          btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+          localMicIcon.classList.add('hidden');
+        }
+
+        broadcastMuteStatus();
       }
     }
 
