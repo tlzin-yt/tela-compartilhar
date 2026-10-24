@@ -262,11 +262,12 @@
     <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 overflow-y-auto items-center justify-center">
       <div id="local-video-container" class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl">
         <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
-        <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden">
+        <!-- Placeholder visível quando a câmera estiver desligada -->
+        <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2">
           <img id="local-placeholder-img" src="" class="w-24 h-24 rounded-full object-cover border-2 border-emerald-500 hidden">
           <div id="local-placeholder-fallback" class="w-24 h-24 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center text-3xl font-bold text-white">?</div>
         </div>
-        <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-semibold text-white">
+        <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-semibold text-white z-10">
           <span id="local-label-name">Você</span>
         </div>
       </div>
@@ -437,9 +438,16 @@
           audio: { echoCancellation: true, noiseSuppression: true } 
         });
         document.getElementById('local-video').srcObject = localStream;
+        // Como a câmera iniciou ligada, esconde o placeholder
+        document.getElementById('local-avatar-placeholder').classList.add('hidden');
+        isCamOff = false;
       } catch (err) {
         console.warn('Câmera indisponível:', err);
         localStream = new MediaStream();
+        // Se falhar a câmera, mostra o placeholder
+        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
+        isCamOff = true;
+        document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
       }
 
       updateLocalTileUI();
@@ -585,13 +593,15 @@
 
       const avatarDiv = document.createElement('div');
       avatarDiv.id = `remote-avatar-${peerId}`;
-      avatarDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 hidden';
+      // Se o stream remoto não tiver vídeo ativo, mostra o avatar
+      const hasVideo = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+      avatarDiv.className = `absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-2 ${hasVideo ? 'hidden' : ''}`;
       avatarDiv.innerHTML = profile.avatar 
         ? `<img src="${profile.avatar}" class="w-24 h-24 rounded-full object-cover border-2 border-emerald-500">`
         : `<div class="w-24 h-24 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center text-3xl font-bold text-white">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
 
       const label = document.createElement('div');
-      label.className = 'absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-semibold text-white';
+      label.className = 'absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg text-xs font-semibold text-white z-10';
       label.innerHTML = `<span id="remote-name-${peerId}">${profile.name}</span>`;
 
       container.appendChild(video);
@@ -661,6 +671,8 @@
         isCamOff = !videoTrack.enabled;
         const btn = document.getElementById('btn-toggle-cam');
         btn.innerHTML = isCamOff ? '<i class="fa-solid fa-video-slash text-rose-500"></i>' : '<i class="fa-solid fa-video"></i>';
+        
+        // Exibe ou esconde o avatar placeholder com base no estado da câmera
         document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
       }
     }
@@ -672,6 +684,7 @@
           const screenTrack = screenStream.getVideoTracks()[0];
           document.getElementById('local-video').srcObject = screenStream;
           isSharingScreen = true;
+          document.getElementById('local-avatar-placeholder').classList.add('hidden');
           screenTrack.onended = () => { stopScreenShare(); };
         } catch (err) { console.error(err); }
       } else { stopScreenShare(); }
@@ -681,6 +694,7 @@
       if (screenStream) screenStream.getTracks().forEach(t => t.stop());
       document.getElementById('local-video').srcObject = localStream;
       isSharingScreen = false;
+      document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
     }
 
     function copyInviteLink() {
