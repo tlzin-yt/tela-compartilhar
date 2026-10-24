@@ -196,7 +196,7 @@
         </div>
         <div class="truncate">
           <div id="my-sidebar-name" class="font-bold text-xs text-slate-800 truncate">Seu Nome</div>
-          <div id="my-sidebar-bio" class="text-[11px] text-slate-400 truncate">Clique para editar</div>
+          <div id="my-sidebar-bio" class="text-[11px] text-slate-400 truncate">Clique para editar foto</div>
         </div>
       </div>
       <button onclick="window.logoutUser()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Sair da Conta">
@@ -357,19 +357,34 @@
         <h3 class="font-bold text-slate-800 text-base">Editar Perfil</h3>
         <button onclick="closeModal('modal-profile')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="space-y-3">
+      <div class="space-y-4">
+        <!-- Pré-visualização da Imagem -->
+        <div class="flex flex-col items-center space-y-2">
+          <div class="relative w-20 h-20">
+            <img id="profile-preview-img" src="" class="w-20 h-20 rounded-full object-cover border-2 border-emerald-500 hidden">
+            <div id="profile-preview-fallback" class="w-20 h-20 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center font-bold text-slate-400 text-xl">?</div>
+          </div>
+          <p class="text-[11px] text-slate-400">Escolha uma foto da sua galeria ou arquivos</p>
+        </div>
+
         <div>
           <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nome</label>
-          <input type="text" id="profile-name-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
+          <input type="text" id="profile-name-input" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
         </div>
+
         <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">URL da Foto de Perfil</label>
-          <input type="text" id="profile-avatar-input" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 focus:outline-none">
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Enviar Foto do Dispositivo</label>
+          <input type="file" id="profile-file-input" accept="image/*" onchange="handleFileSelect(event)" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Ou Link da Foto (URL)</label>
+          <input type="text" id="profile-avatar-input" oninput="handleUrlInput(event)" placeholder="https://..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:border-emerald-500">
         </div>
       </div>
       <div class="flex justify-end space-x-2 pt-2">
         <button onclick="closeModal('modal-profile')" class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">Cancelar</button>
-        <button onclick="saveProfile()" class="px-4 py-1.5 bg-emerald-500 text-white font-bold rounded-xl text-xs">Salvar</button>
+        <button onclick="saveProfile()" class="px-4 py-1.5 bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm">Salvar</button>
       </div>
     </div>
   </div>
@@ -413,6 +428,7 @@
   <!-- SCRIPT APLICAÇÃO -->
   <script>
     let currentUser = { name: '', avatar: '', bio: '', email: '', peerId: '' };
+    let tempAvatar = '';
     let friendsList = [];
     let groupsList = [];
     
@@ -512,7 +528,7 @@
         }
       }
 
-      // Atualizar foto de perfil do card local na chamada
+      // Atualizar foto do card local na chamada
       const localFallbackImg = document.getElementById('local-placeholder-img');
       const localFallbackChar = document.getElementById('local-placeholder-fallback');
       if (currentUser.avatar) {
@@ -535,15 +551,62 @@
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
     function openProfileModal() {
+      tempAvatar = currentUser.avatar || '';
       document.getElementById('profile-name-input').value = currentUser.name || '';
       document.getElementById('profile-avatar-input').value = currentUser.avatar || '';
+      document.getElementById('profile-file-input').value = '';
+      updateModalPreview(tempAvatar);
       openModal('modal-profile');
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Selecione uma imagem menor que 5MB.');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          tempAvatar = e.target.result;
+          document.getElementById('profile-avatar-input').value = '';
+          updateModalPreview(tempAvatar);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleUrlInput(event) {
+      tempAvatar = event.target.value.trim();
+      updateModalPreview(tempAvatar);
+    }
+
+    function updateModalPreview(src) {
+      const previewImg = document.getElementById('profile-preview-img');
+      const previewFallback = document.getElementById('profile-preview-fallback');
+
+      if (src) {
+        previewImg.src = src;
+        previewImg.classList.remove('hidden');
+        previewFallback.classList.add('hidden');
+      } else {
+        previewImg.classList.add('hidden');
+        previewFallback.classList.remove('hidden');
+      }
     }
 
     function saveProfile() {
       currentUser.name = document.getElementById('profile-name-input').value.trim() || 'Usuário';
-      currentUser.avatar = document.getElementById('profile-avatar-input').value.trim();
+      currentUser.avatar = tempAvatar;
       saveUserData();
+
+      // Transmitir perfil atualizado para conexões ativas na chamada
+      Object.values(activeConnections).forEach(conn => {
+        if (conn && conn.open) {
+          conn.send({ type: 'profile', name: currentUser.name, avatar: currentUser.avatar });
+        }
+      });
+
       closeModal('modal-profile');
     }
 
