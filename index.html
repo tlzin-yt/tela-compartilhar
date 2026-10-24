@@ -127,7 +127,6 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
 
-    /* PADRÃO DE GRADE DE FUNDO */
     .bg-grid-pattern {
       background-size: 30px 30px;
       background-image: 
@@ -266,7 +265,7 @@
       </div>
     </div>
 
-    <!-- ETAPA 3: DASHBOARD DE SALAS (DESIGN DECORADO E PREENCHIDO) -->
+    <!-- ETAPA 3: DASHBOARD DE SALAS -->
     <div id="step-room" class="hidden w-full">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
@@ -399,7 +398,7 @@
 
   </main>
 
-  <!-- ETAPA 4: TELA DA CALL (Interface Pro) -->
+  <!-- ETAPA 4: TELA DA CALL -->
   <div id="step-call" class="hidden fixed inset-0 bg-slate-950 flex flex-col z-30 text-slate-100">
     <!-- Topbar da Call -->
     <div class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between">
@@ -419,15 +418,21 @@
           <span id="guests-badge" class="hidden absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md animate-pulse">0</span>
         </button>
 
-        <!-- MENU DROPDOWN DE SOLICITAÇÕES -->
+        <!-- MENU DROPDOWN DE SOLICITAÇÕES COM BOTÃO COPIAR LINK -->
         <div id="guests-dropdown" class="hidden absolute top-12 right-0 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-4 z-50 space-y-3">
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Pedidos de Entrada</h4>
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Gerenciar Entrada</h4>
             <span id="guests-count-text" class="text-[11px] text-slate-400">0 pendente(s)</span>
           </div>
 
-          <div id="guests-list" class="max-h-60 overflow-y-auto space-y-2">
-            <p id="no-guests-msg" class="text-xs text-slate-500 text-center py-4">Nenhum pedido pendente no momento.</p>
+          <!-- BOTÃO PARA COPIAR LINK DENTRO DO MENU CONVIDADOS -->
+          <button onclick="copyCurrentCallLink()" class="btn-press w-full py-2.5 px-3 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl text-xs font-bold border border-blue-500/30 transition flex items-center justify-center space-x-2">
+            <i class="fa-regular fa-copy"></i>
+            <span>Copiar Link da Call</span>
+          </button>
+
+          <div id="guests-list" class="max-h-60 overflow-y-auto space-y-2 pt-1">
+            <p id="no-guests-msg" class="text-xs text-slate-500 text-center py-3">Nenhum pedido pendente no momento.</p>
           </div>
         </div>
       </div>
@@ -493,7 +498,7 @@
     </div>
   </div>
 
-  <!-- RODAPÉ FIXO DECORADO -->
+  <!-- RODAPÉ FIXO -->
   <footer class="w-full text-center py-4 border-t border-slate-200/80 text-xs text-slate-400 bg-white/80 backdrop-blur-md z-10">
     OmniCall © 2026 • Tecnologia Peer-to-Peer Criptografada
   </footer>
@@ -740,7 +745,7 @@
       const email = document.getElementById('auth-email').value;
       const pass = document.getElementById('auth-password').value;
       if (!email || !pass) { 
-        showToast("Preencha e-mail e palavra-passe.", "error"); 
+        showToast("Preencha e-mail e senha.", "error"); 
         return; 
       }
       window.registerWithEmail(email, pass);
@@ -802,7 +807,7 @@
     function confirmProfile() {
       const inputName = document.getElementById('profile-name-input').value.trim();
       if (!inputName) { 
-        showToast("Por favor, digite o seu nome.", "error"); 
+        showToast("Por favor, digite seu nome.", "error"); 
         return; 
       }
       currentUser.name = inputName;
@@ -857,6 +862,7 @@
       if (isMyRoom) {
         startCallProcess(true);
       } else {
+        targetHostPeerId = `omnicall-room-${currentRoomCode}-master`;
         document.getElementById('step-room').classList.add('hidden');
         document.getElementById('step-prejoin').classList.remove('hidden');
       }
@@ -910,55 +916,31 @@
       const myUniqueId = `omnicall-${currentRoomCode}-${Math.random().toString(36).substring(2, 8)}`;
       const preciseHostId = `omnicall-room-${currentRoomCode}-master`;
 
-      peer = new Peer(peerConfig);
+      if (forceHost) {
+        peer = new Peer(preciseHostId, peerConfig);
 
-      peer.on('open', () => {
-        if (forceHost) {
-          const hostPeer = new Peer(preciseHostId, peerConfig);
+        peer.on('open', (hId) => {
+          setupHostSuccess(peer, hId);
+        });
 
-          hostPeer.on('open', (hId) => {
-            setupHostSuccess(hostPeer, hId);
-          });
-
-          hostPeer.on('error', (err) => {
-            if (err.type === 'unavailable-id') {
-              setTimeout(() => {
-                hostPeer.destroy();
-                initPeerMesh(true);
-              }, 1000);
-            } else {
-              setupHostSuccess(hostPeer, preciseHostId);
-            }
-          });
-        } else {
-          const testHostPeer = new Peer(preciseHostId, peerConfig);
-
-          testHostPeer.on('open', (hId) => {
-            testHostPeer.destroy();
-            peer.destroy();
-            showToast('O anfitrião ainda não entrou nesta sala ou a call está encerrada.', 'error');
-            leaveCall();
-          });
-
-          testHostPeer.on('error', (err) => {
-            if (err.type === 'unavailable-id') {
-              testHostPeer.destroy();
-              const guestPeer = new Peer(myUniqueId, peerConfig);
-              guestPeer.on('open', (gId) => {
-                currentUser.peerId = gId;
-                targetHostPeerId = preciseHostId;
-                
-                document.getElementById('step-room').classList.add('hidden');
-                document.getElementById('step-prejoin').classList.remove('hidden');
-
-                setupPeerEvents(guestPeer);
-              });
-              peer.destroy();
-              peer = guestPeer;
-            }
-          });
-        }
-      });
+        peer.on('error', (err) => {
+          if (err.type === 'unavailable-id') {
+            setTimeout(() => {
+              if (peer) peer.destroy();
+              initPeerMesh(true);
+            }, 1000);
+          } else {
+            setupHostSuccess(peer, preciseHostId);
+          }
+        });
+      } else {
+        peer = new Peer(myUniqueId, peerConfig);
+        peer.on('open', (gId) => {
+          currentUser.peerId = gId;
+          targetHostPeerId = preciseHostId;
+          setupPeerEvents(peer);
+        });
+      }
     }
 
     function setupHostSuccess(hPeer, hId) {
@@ -974,10 +956,7 @@
       updateConnectionStatus('connected', 'Você é o anfitrião');
 
       showMeetInviteCard();
-
       setupPeerEvents(hPeer);
-      if (peer && peer !== hPeer) peer.destroy();
-      peer = hPeer;
     }
 
     function showMeetInviteCard() {
@@ -1003,12 +982,26 @@
       });
     }
 
+    // COPIAR LINK DA CALL DENTRO DO MENU CONVIDADOS
+    function copyCurrentCallLink() {
+      const fullLink = `${window.location.origin}${window.location.pathname}?sala=${encodeURIComponent(currentRoomCode)}`;
+      navigator.clipboard.writeText(fullLink).then(() => {
+        showToast('Link da call copiado para a área de transferência!', 'success');
+      });
+    }
+
     function sendJoinRequest() {
       ensureAudioContext();
       document.getElementById('step-prejoin').classList.add('hidden');
       document.getElementById('step-waiting').classList.remove('hidden');
 
-      const conn = peer.connect(targetHostPeerId);
+      if (!peer || !peer.open) {
+        initPeerMesh(false);
+        setTimeout(sendJoinRequest, 500);
+        return;
+      }
+
+      const conn = peer.connect(targetHostPeerId, { reliable: true });
       activeConnections[targetHostPeerId] = conn;
 
       conn.on('open', () => {
@@ -1042,6 +1035,11 @@
           handleDataMessage(data, targetHostPeerId, peer);
         }
       });
+
+      conn.on('error', (err) => {
+        showToast('Erro ao conectar com o anfitrião.', 'error');
+        cancelJoinRequest();
+      });
     }
 
     function connectToPeerDirectly(peerId) {
@@ -1074,6 +1072,7 @@
     function addGuestRequestUI(conn, data) {
       pendingGuestsList.push({ conn, data });
       updateGuestsUI();
+      showToast(`${data.name} pediu para entrar na call!`, 'success');
     }
 
     function updateGuestsUI() {
@@ -1094,7 +1093,7 @@
       listContainer.innerHTML = '';
 
       if (count === 0) {
-        listContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Nenhum pedido pendente no momento.</p>';
+        listContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-3">Nenhum pedido pendente no momento.</p>';
         return;
       }
 
