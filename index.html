@@ -502,6 +502,7 @@
     let currentRoomCode = null;
     let activeConnections = {};
     let mediaCalls = {};
+    let screenCalls = {};
     let remoteProfiles = {};
     let pendingGuestsList = [];
     let targetHostPeerId = null;
@@ -1101,9 +1102,11 @@
     function setupConnectionEvents(conn, peerId) {
       conn.on('close', () => {
         removeRemoteVideo(peerId);
+        removeScreenTile(peerId);
       });
       conn.on('error', () => {
         removeRemoteVideo(peerId);
+        removeScreenTile(peerId);
       });
     }
 
@@ -1196,8 +1199,13 @@
 
     function setupPeerEvents(pInstance) {
       pInstance.on('call', (call) => {
-        call.answer(localStream);
-        handleIncomingStream(call);
+        if (call.metadata && call.metadata.type === 'screen') {
+          call.answer();
+          handleIncomingScreenCall(call);
+        } else {
+          call.answer(localStream);
+          handleIncomingStream(call);
+        }
       });
 
       pInstance.on('connection', (conn) => {
@@ -1250,6 +1258,10 @@
         remoteProfiles[peerId].isMuted = data.isMuted;
         remoteProfiles[peerId].isDeafened = data.isDeafened;
         updateRemoteTileMetadata(peerId, remoteProfiles[peerId].name, remoteProfiles[peerId].avatar, data.isMuted, data.isDeafened);
+      } else if (data.type === 'screen-share-start') {
+        showToast(`${data.name} começou a partilhar a tela.`, 'success');
+      } else if (data.type === 'screen-share-stop') {
+        removeScreenTile(data.peerId);
       }
     }
 
@@ -1261,7 +1273,6 @@
       });
     }
 
-    // CORRIGIDO: Captura o stream inicial e escuta novas tracks dinâmicas (ex: compartilhamento de tela ou câmara)
     function handleIncomingStream(call) {
       mediaCalls[call.peer] = call;
       ensureRemoteTileExists(call.peer);
@@ -1270,7 +1281,6 @@
         bindStreamToVideo(call.peer, remoteStream);
       });
 
-      // NOVO: Monitora faixas de vídeo/áudio adicionadas dinamicamente após a conexão inicial
       if (call.peerConnection) {
         call.peerConnection.ontrack = (event) => {
           const remoteStream = event.streams[0] || new MediaStream([event.track]);
@@ -1284,6 +1294,68 @@
       call.on('error', () => {
         removeRemoteVideo(call.peer);
       });
+    }
+
+    function handleIncomingScreenCall(call) {
+      screenCalls[call.peer] = call;
+      const ownerName = remoteProfiles[call.peer]?.name || 'Participante';
+
+      call.on('stream', (screenStream) => {
+        ensureScreenTileExists(call.peer, ownerName);
+        const video = document.getElementById(`screen-video-el-${call.peer}`);
+        if (video) {
+          video.srcObject = screenStream;
+          video.play().catch(e => console.log("Autoplay screen error:", e));
+        }
+      });
+
+      call.on('close', () => {
+        removeScreenTile(call.peer);
+      });
+      call.on('error', () => {
+        removeScreenTile(call.peer);
+      });
+    }
+
+    function ensureScreenTileExists(peerId, ownerName) {
+      let container = document.getElementById(`screen-container-${peerId}`);
+      if (!container) {
+        const grid = document.getElementById('video-grid');
+        
+        container = document.createElement('div');
+        container.id = `screen-container-${peerId}`;
+        container.className = 'relative bg-slate-950 border-2 border-blue-500 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl col-span-full sm:col-span-2 transition-all duration-300';
+
+        const video = document.createElement('video');
+        video.id = `screen-video-el-${peerId}`;
+        video.autoplay = true;
+        video.playsinline = true;
+        video.className = 'w-full h-full object-contain bg-black';
+
+        const label = document.createElement('div');
+        label.className = 'absolute bottom-4 left-4 bg-blue-600/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-white z-10 border border-blue-400 flex items-center space-x-2 shadow-lg';
+        label.innerHTML = `
+          <i class="fa-solid fa-desktop text-sm"></i>
+          <span>Tela de ${ownerName}</span>
+        `;
+
+        container.appendChild(video);
+        container.appendChild(label);
+        grid.insertBefore(container, grid.firstChild);
+        updateParticipantCount();
+      }
+    }
+
+    function removeScreenTile(peerId) {
+      const container = document.getElementById(`screen-container-${peerId}`);
+      if (container) {
+        container.remove();
+        updateParticipantCount();
+      }
+      if (screenCalls[peerId]) {
+        try { screenCalls[peerId].close(); } catch(e){}
+        delete screenCalls[peerId];
+      }
     }
 
     function bindStreamToVideo(peerId, remoteStream) {
@@ -1488,7 +1560,7 @@
     async function toggleScreenShare() {
       if (!isSharingScreen) {
         try {
-          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
           playAudioTone('screen_start');
           const screenVideoTrack = screenStream.getVideoTracks()[0];
 
@@ -1496,20 +1568,25 @@
           document.getElementById('local-avatar-placeholder').classList.add('hidden');
           isSharingScreen = true;
 
-          Object.values(mediaCalls).forEach(call => {
-            if (call && call.peerConnection) {
-              const senders = call.peerConnection.getSenders();
-              const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-              if (videoSender) {
-                videoSender.replaceTrack(screenVideoTrack);
-              } else {
-                call.peerConnection.addTrack(screenVideoTrack, screenStream);
-              }
+          // Inicia chamadas dedicadas de tela para cada peer conectado
+          Object.keys(activeConnections).forEach(peerId => {
+            if (peer && peer.open) {
+              const screenCall = peer.call(peerId, screenStream, { metadata: { type: 'screen', owner: currentUser.peerId } });
+              screenCalls[peerId] = screenCall;
+            }
+          });
+
+          Object.values(activeConnections).forEach(conn => {
+            if (conn && conn.open) {
+              conn.send({ type: 'screen-share-start', peerId: currentUser.peerId, name: currentUser.name });
             }
           });
 
           screenVideoTrack.onended = () => { stopScreenShare(); };
-        } catch (err) { console.error('Erro ao compartilhar tela:', err); }
+          showToast('Compartilhando tela...', 'success');
+        } catch (err) { 
+          console.error('Erro ao compartilhar tela:', err); 
+        }
       } else { 
         stopScreenShare(); 
       }
@@ -1526,23 +1603,25 @@
       isSharingScreen = false;
       document.getElementById('local-avatar-placeholder').classList.toggle('hidden', !isCamOff);
 
-      const cameraVideoTrack = localStream.getVideoTracks()[0];
-      if (cameraVideoTrack) {
-        Object.values(mediaCalls).forEach(call => {
-          if (call && call.peerConnection) {
-            const senders = call.peerConnection.getSenders();
-            const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-            if (videoSender) {
-              videoSender.replaceTrack(cameraVideoTrack);
-            }
-          }
-        });
-      }
+      Object.values(screenCalls).forEach(call => {
+        try { call.close(); } catch(e){}
+      });
+      screenCalls = {};
+
+      Object.values(activeConnections).forEach(conn => {
+        if (conn && conn.open) {
+          conn.send({ type: 'screen-share-stop', peerId: currentUser.peerId });
+        }
+      });
+
+      showToast('Compartilhamento de tela encerrado.', 'success');
     }
 
     function leaveCall() {
       if (localStream) localStream.getTracks().forEach(t => t.stop());
       if (screenStream) screenStream.getTracks().forEach(t => t.stop());
+      Object.values(screenCalls).forEach(call => { try { call.close(); } catch(e){} });
+      screenCalls = {};
       if (peer) peer.destroy();
 
       window.history.pushState({}, '', window.location.pathname);
