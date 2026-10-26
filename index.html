@@ -434,7 +434,7 @@
     <div id="video-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 overflow-y-auto items-center justify-center max-w-7xl mx-auto w-full relative">
       <div id="local-video-container" class="relative bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden aspect-video flex items-center justify-center shadow-2xl transition-all duration-150">
         <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
-        <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3 hidden">
+        <div id="local-avatar-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3">
           <img id="local-placeholder-img" src="" class="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl hidden transition-all duration-150">
           <div id="local-placeholder-fallback" class="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl font-black text-white shadow-xl transition-all duration-150">?</div>
         </div>
@@ -478,7 +478,7 @@
         <i class="fa-solid fa-headphones"></i>
       </button>
       <button id="btn-toggle-cam" onclick="toggleCam()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition text-2xl shadow-lg border border-slate-700 shrink-0" title="Câmara Privada (Só eu vejo)">
-        <i class="fa-solid fa-video"></i>
+        <i class="fa-solid fa-video-slash text-rose-500"></i>
       </button>
       <button id="btn-toggle-screen" onclick="toggleScreenShare()" class="btn-press w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 flex items-center justify-center transition text-2xl shadow-lg shrink-0" title="Compartilhar Tela">
         <i class="fa-solid fa-desktop"></i>
@@ -510,7 +510,7 @@
 
     let isMicMuted = false;
     let isDeafened = false;
-    let isCamOff = false;
+    let isCamOff = true; // Inicia com câmara OFF por padrão
     let isSharingScreen = false;
     let isHost = false;
 
@@ -880,36 +880,32 @@
         
         localPreviewStream = new MediaStream(localStream.getTracks());
         document.getElementById('local-video').srcObject = localPreviewStream;
-        document.getElementById('local-avatar-placeholder').classList.add('hidden');
-        isCamOff = false;
-        showToast('Câmara e microfone ativados!', 'success');
+        
+        // Inicia com a câmara DESLIGADA por padrão
+        isCamOff = true;
+        if (localStream.getVideoTracks().length > 0) {
+          localStream.getVideoTracks()[0].enabled = false;
+        }
+        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
+        document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
+
+        showToast('Áudio ativado (câmara desligada por padrão)', 'success');
       } catch (err) {
-        console.warn('Câmara frontal falhou, tentando padrão:', err);
+        console.warn('Câmara falhou:', err);
         try {
           localStream = await navigator.mediaDevices.getUserMedia({ 
-            video: true,
             audio: { echoCancellation: true, noiseSuppression: true } 
           });
-          localPreviewStream = new MediaStream(localStream.getTracks());
-          document.getElementById('local-video').srcObject = localPreviewStream;
-          document.getElementById('local-avatar-placeholder').classList.add('hidden');
-          isCamOff = false;
-        } catch (err2) {
-          try {
-            localStream = await navigator.mediaDevices.getUserMedia({ 
-              audio: { echoCancellation: true, noiseSuppression: true } 
-            });
-            localPreviewStream = new MediaStream(localStream.getAudioTracks());
-            showToast('Câmara indisponível. Apenas microfone.', 'success');
-          } catch(e) {
-            showToast('Erro crítico: Acesso ao microfone negado!', 'error');
-            localStream = new MediaStream();
-            localPreviewStream = new MediaStream();
-          }
-          document.getElementById('local-avatar-placeholder').classList.remove('hidden');
-          isCamOff = true;
-          document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
+          localPreviewStream = new MediaStream(localStream.getAudioTracks());
+          showToast('Apenas microfone disponível.', 'success');
+        } catch(e) {
+          showToast('Erro crítico: Acesso ao microfone negado!', 'error');
+          localStream = new MediaStream();
+          localPreviewStream = new MediaStream();
         }
+        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
+        isCamOff = true;
+        document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
       }
 
       updateLocalTileUI();
@@ -933,21 +929,24 @@
         });
         localPreviewStream = new MediaStream(localStream.getTracks());
         document.getElementById('local-video').srcObject = localPreviewStream;
-        document.getElementById('local-avatar-placeholder').classList.add('hidden');
-        isCamOff = false;
+
+        isCamOff = true;
+        if (localStream.getVideoTracks().length > 0) {
+          localStream.getVideoTracks()[0].enabled = false;
+        }
+        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
+        document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
       } catch (err) {
         try {
           localStream = await navigator.mediaDevices.getUserMedia({ 
             audio: { echoCancellation: true, noiseSuppression: true } 
           });
           localPreviewStream = new MediaStream(localStream.getAudioTracks());
-          showToast('Câmara indisponível. Apenas microfone.', 'success');
         } catch(e) {
-          showToast('Erro: Acesso ao microfone negado!', 'error');
           localStream = new MediaStream();
           localPreviewStream = new MediaStream();
         }
-        document.getElementById('local-avatar-placeholder').classList.add('hidden');
+        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
         isCamOff = true;
         document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
       }
@@ -1059,7 +1058,7 @@
 
       if (!peer || !peer.open) {
         initPeerMesh(false);
-        setTimeout(sendJoinRequest, 600);
+        setTimeout(sendJoinRequest, 400);
         return;
       }
 
@@ -1074,7 +1073,8 @@
           name: currentUser.name, 
           avatar: currentUser.avatar, 
           isMuted: isMicMuted, 
-          isDeafened: isDeafened 
+          isDeafened: isDeafened,
+          isCamOff: isCamOff
         });
       });
 
@@ -1092,7 +1092,8 @@
               name: currentUser.name, 
               avatar: currentUser.avatar, 
               isMuted: isMicMuted, 
-              isDeafened: isDeafened 
+              isDeafened: isDeafened,
+              isCamOff: isCamOff
             });
 
             const call = peer.call(targetHostPeerId, localStream);
@@ -1122,7 +1123,8 @@
           name: currentUser.name, 
           avatar: currentUser.avatar, 
           isMuted: isMicMuted, 
-          isDeafened: isDeafened 
+          isDeafened: isDeafened,
+          isCamOff: isCamOff
         });
       });
 
@@ -1202,7 +1204,7 @@
 
         conn.send({ type: 'entry-response', approved: true });
 
-        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
+        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false, isCamOff: data.isCamOff ?? true };
         ensureRemoteTileExists(data.peerId);
 
         activeConnections[data.peerId] = conn;
@@ -1256,9 +1258,9 @@
         if (data.type === 'request-entry' && isHost) {
           addGuestRequestUI(conn, data);
         } else if (data.type === 'direct-sync') {
-          remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
+          remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false, isCamOff: data.isCamOff ?? true };
           ensureRemoteTileExists(data.peerId);
-          updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
+          updateRemoteTileMetadata(peerId, data.name, data.avatar, data.isMuted, data.isDeafened, data.isCamOff ?? true);
           
           if (isHost) {
             conn.send({ 
@@ -1267,7 +1269,8 @@
               name: currentUser.name, 
               avatar: currentUser.avatar, 
               isMuted: isMicMuted, 
-              isDeafened: isDeafened 
+              isDeafened: isDeafened,
+              isCamOff: isCamOff
             });
           }
         } else {
@@ -1285,14 +1288,15 @@
 
     function handleDataMessage(data, peerId, pInstance) {
       if (data.type === 'join' || data.type === 'direct-sync') {
-        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false };
+        remoteProfiles[data.peerId] = { name: data.name, avatar: data.avatar, isMuted: data.isMuted || false, isDeafened: data.isDeafened || false, isCamOff: data.isCamOff ?? true };
         ensureRemoteTileExists(data.peerId);
-        updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened);
+        updateRemoteTileMetadata(data.peerId, data.name, data.avatar, data.isMuted, data.isDeafened, data.isCamOff ?? true);
       } else if (data.type === 'mute-status') {
         if (!remoteProfiles[peerId]) remoteProfiles[peerId] = {};
         remoteProfiles[peerId].isMuted = data.isMuted;
         remoteProfiles[peerId].isDeafened = data.isDeafened;
-        updateRemoteTileMetadata(peerId, remoteProfiles[peerId].name, remoteProfiles[peerId].avatar, data.isMuted, data.isDeafened);
+        remoteProfiles[peerId].isCamOff = data.isCamOff ?? true;
+        updateRemoteTileMetadata(peerId, remoteProfiles[peerId].name, remoteProfiles[peerId].avatar, data.isMuted, data.isDeafened, remoteProfiles[peerId].isCamOff);
       } else if (data.type === 'screen-share-start') {
         showToast(`${data.name} começou a partilhar a tela.`, 'success');
       } else if (data.type === 'screen-share-stop') {
@@ -1303,7 +1307,7 @@
     function broadcastStatus() {
       Object.values(activeConnections).forEach(conn => {
         if (conn && conn.open) {
-          conn.send({ type: 'mute-status', isMuted: isMicMuted, isDeafened: isDeafened });
+          conn.send({ type: 'mute-status', isMuted: isMicMuted, isDeafened: isDeafened, isCamOff: isCamOff });
         }
       });
     }
@@ -1441,11 +1445,11 @@
         video.play().catch(e => console.log("Autoplay restrito pelo navegador:", e));
       }
       
+      const profile = remoteProfiles[peerId] || {};
       const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
       if (avatarDiv) {
-        const videoTracks = remoteStream.getVideoTracks();
-        const hasVideo = videoTracks.length > 0 && videoTracks.some(track => track.enabled && track.readyState === 'live');
-        avatarDiv.classList.toggle('hidden', hasVideo);
+        const isCamOffRemote = profile.isCamOff ?? true;
+        avatarDiv.classList.toggle('hidden', !isCamOffRemote);
       }
 
       setupRemoteAudioDetection(peerId, remoteStream);
@@ -1455,7 +1459,7 @@
     function ensureRemoteTileExists(peerId) {
       let container = document.getElementById(`video-container-${peerId}`);
       if (!container) {
-        const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false, isDeafened: false };
+        const profile = remoteProfiles[peerId] || { name: 'Participante', avatar: '', isMuted: false, isDeafened: false, isCamOff: true };
         const grid = document.getElementById('video-grid');
         
         container = document.createElement('div');
@@ -1471,7 +1475,7 @@
 
         const avatarDiv = document.createElement('div');
         avatarDiv.id = `remote-avatar-${peerId}`;
-        avatarDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3';
+        avatarDiv.className = `absolute inset-0 flex flex-col items-center justify-center bg-slate-900 space-y-3 ${profile.isCamOff ? '' : 'hidden'}`;
         avatarDiv.innerHTML = profile.avatar 
           ? `<img src="${profile.avatar}" class="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
           : `<div class="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl font-black text-white shadow-xl transition-all duration-150">${profile.name ? profile.name.charAt(0).toUpperCase() : '?'}</div>`;
@@ -1493,7 +1497,7 @@
       }
     }
 
-    function updateRemoteTileMetadata(peerId, name, avatar, isMuted, isDeafened) {
+    function updateRemoteTileMetadata(peerId, name, avatar, isMuted, isDeafened, isCamOff) {
       const nameEl = document.getElementById(`remote-name-${peerId}`);
       if (nameEl) nameEl.textContent = name;
 
@@ -1511,6 +1515,7 @@
 
       const avatarDiv = document.getElementById(`remote-avatar-${peerId}`);
       if (avatarDiv) {
+        avatarDiv.classList.toggle('hidden', !isCamOff);
         avatarDiv.innerHTML = avatar 
           ? `<img src="${avatar}" class="w-32 h-32 rounded-full object-cover border-4 border-slate-700 shadow-xl transition-all duration-150">`
           : `<div class="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl font-black text-white shadow-xl transition-all duration-150">${name ? name.charAt(0).toUpperCase() : '?'}</div>`;
@@ -1627,10 +1632,17 @@
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         isCamOff = !videoTrack.enabled;
+        
         const btn = document.getElementById('btn-toggle-cam');
         btn.innerHTML = isCamOff ? '<i class="fa-solid fa-video-slash text-rose-500"></i>' : '<i class="fa-solid fa-video"></i>';
         
-        showToast(isCamOff ? 'Câmara oculta para os outros (visível apenas para si)' : 'Câmara visível para todos', 'success');
+        const localAvatar = document.getElementById('local-avatar-placeholder');
+        if (localAvatar) {
+          localAvatar.classList.toggle('hidden', !isCamOff);
+        }
+
+        showToast(isCamOff ? 'Câmara oculta para os outros' : 'Câmara visível para todos', 'success');
+        broadcastStatus();
       }
     }
 
@@ -1682,6 +1694,11 @@
         document.getElementById('local-video').srcObject = localPreviewStream;
       }
       isSharingScreen = false;
+
+      const localAvatar = document.getElementById('local-avatar-placeholder');
+      if (localAvatar) {
+        localAvatar.classList.toggle('hidden', !isCamOff);
+      }
 
       Object.values(screenCalls).forEach(call => {
         try { call.close(); } catch(e){}
