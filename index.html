@@ -947,7 +947,7 @@
           localStream = new MediaStream();
           localPreviewStream = new MediaStream();
         }
-        document.getElementById('local-avatar-placeholder').classList.remove('hidden');
+        document.getElementById('local-avatar-placeholder').classList.add('hidden');
         isCamOff = true;
         document.getElementById('btn-toggle-cam').innerHTML = '<i class="fa-solid fa-video-slash text-rose-500"></i>';
       }
@@ -1309,7 +1309,6 @@
       call.on('stream', (remoteStream) => {
         bindStreamToVideo(call.peer, remoteStream);
         
-        // Assegura que se o stream receber pistas de vídeo depois, elas sejam aplicadas
         remoteStream.onaddtrack = () => {
           bindStreamToVideo(call.peer, remoteStream);
         };
@@ -1343,6 +1342,7 @@
         const video = document.getElementById(`screen-video-el-${call.peer}`);
         if (video) {
           video.srcObject = screenStream;
+          video.muted = false; // Garante reprodução do áudio da tela
           video.play().catch(e => console.log("Autoplay screen error:", e));
         }
       });
@@ -1368,6 +1368,7 @@
         video.id = `screen-video-el-${peerId}`;
         video.autoplay = true;
         video.playsinline = true;
+        video.muted = false; // Habilita o áudio da tela compartilhada para os outros ouvirem
         video.className = 'w-full h-full object-contain bg-black';
 
         const label = document.createElement('div');
@@ -1630,7 +1631,10 @@
     async function toggleScreenShare() {
       if (!isSharingScreen) {
         try {
-          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+          screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+            video: true, 
+            audio: { suppressLocalAudioPlayback: false } 
+          });
           playAudioTone('screen_start');
           const screenVideoTrack = screenStream.getVideoTracks()[0];
 
@@ -1652,7 +1656,7 @@
           });
 
           screenVideoTrack.onended = () => { stopScreenShare(); };
-          showToast('Compartilhando tela...', 'success');
+          showToast('Compartilhando tela com áudio...', 'success');
         } catch (err) { 
           console.error('Erro ao compartilhar tela:', err); 
         }
